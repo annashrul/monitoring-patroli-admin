@@ -1,0 +1,609 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import api, { getErrorMessage } from "../api";
+import { useSite } from "../SiteContext";
+import Modal from "../components/Modal";
+import PostLocationMap from "../components/PostLocationMap";
+import { isPointInPolygon } from "../utils/geo";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Badge } from "../components/ui/badge";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "../components/ui/table";
+import { Checkbox } from "../components/ui/checkbox";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  MapPin,
+  QrCode,
+  Printer,
+  Eye,
+  Loader2,
+} from "lucide-react";
+
+const EMPTY_FORM = {
+  name: "",
+  radius_m: 20,
+  latitude: "",
+  longitude: "",
+  is_active: true,
+};
+
+export default function Posts() {
+  const {
+    sites,
+    selectedSiteId,
+    selectedSite,
+    loading: loadingSites,
+  } = useSite();
+  const [posts, setPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const [formMode, setFormMode] = useState(null);
+  const [editingPost, setEditingPost] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
+
+  const [qrPost, setQrPost] = useState(null);
+
+  const fetchPosts = useCallback(async (siteId) => {
+    if (!siteId) return;
+    setLoadingPosts(true);
+    try {
+      const res = await api.get(`/api/sites/${siteId}/posts`);
+      setPosts(res.data.data || []);
+    } catch (err) {
+      setError(getErrorMessage(err, "Gagal memuat daftar pos."));
+    } finally {
+      setLoadingPosts(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedSiteId) {
+      setPosts([]);
+      fetchPosts(selectedSiteId);
+      setFormMode(null);
+    }
+  }, [selectedSiteId, fetchPosts]);
+
+  const openCreate = () => {
+    setFormMode("create");
+    setEditingPost(null);
+    setForm(EMPTY_FORM);
+    setFormError("");
+    setNotice("");
+  };
+
+  const openEdit = (post) => {
+    setFormMode("edit");
+    setEditingPost(post);
+    setForm({
+      name: post.name,
+      radius_m: post.radius_m,
+      latitude: post.latitude,
+      longitude: post.longitude,
+      is_active: post.is_active,
+    });
+    setFormError("");
+    setNotice("");
+  };
+
+  const closeForm = () => {
+    setFormMode(null);
+    setEditingPost(null);
+    setForm(EMPTY_FORM);
+    setFormError("");
+  };
+
+  const setLocation = (lat, lng) => {
+    setForm((f) => ({
+      ...f,
+      latitude: Number(lat.toFixed ? lat.toFixed(7) : lat),
+      longitude: Number(lng.toFixed ? lng.toFixed(7) : lng),
+    }));
+  };
+
+  const handleMapPick = ({ lat, lng }) => {
+    setLocation(lat, lng);
+    setFormError("");
+  };
+
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      setFormError("Browser tidak mendukung geolocation.");
+      return;
+    }
+    setGeoLoading(true);
+    setFormError("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocation(pos.coords.latitude, pos.coords.longitude);
+        setGeoLoading(false);
+      },
+      (err) => {
+        setGeoLoading(false);
+        setFormError(`Gagal mengambil lokasi: ${err.message}`);
+      },
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
+  };
+
+  const pickedPoint =
+    form.latitude !== "" && form.longitude !== ""
+      ? {
+          lat: Number(form.latitude),
+          lng: Number(form.longitude),
+          radius: Number(form.radius_m) || 20,
+        }
+      : null;
+
+  const pointInside =
+    pickedPoint && selectedSite
+      ? isPointInPolygon(pickedPoint, selectedSite.polygon)
+      : null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormError("");
+
+    if (!form.name.trim()) {
+      setFormError("Nama pos wajib diisi.");
+      return;
+    }
+    const radius = parseInt(form.radius_m, 10);
+    if (Number.isNaN(radius) || radius < 5 || radius > 500) {
+      setFormError("Radius harus berupa angka 5 - 500 meter.");
+      return;
+    }
+    if (!pickedPoint) {
+      setFormError(
+        "Lokasi pos wajib ditentukan (klik peta atau gunakan lokasi saat ini).",
+      );
+      return;
+    }
+    if (pointInside === false) {
+      setFormError(
+        "Titik berada di luar polygon site. Pilih titik di dalam area.",
+      );
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (formMode === "create") {
+        await api.post("/api/posts", {
+          site_id: selectedSiteId,
+          name: form.name.trim(),
+          latitude: pickedPoint.lat,
+          longitude: pickedPoint.lng,
+          radius_m: radius,
+        });
+        setNotice("Pos berhasil dibuat.");
+      } else {
+        await api.put(`/api/posts/${editingPost.id}`, {
+          name: form.name.trim(),
+          latitude: pickedPoint.lat,
+          longitude: pickedPoint.lng,
+          radius_m: radius,
+          is_active: !!form.is_active,
+        });
+        setNotice("Pos berhasil diperbarui.");
+      }
+      closeForm();
+      fetchPosts(selectedSiteId);
+    } catch (err) {
+      setFormError(getErrorMessage(err, "Gagal menyimpan pos."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (post) => {
+    if (
+      !window.confirm(
+        `Hapus pos "${post.name}"? Riwayat scan terkait mungkin ikut terpengaruh.`,
+      )
+    ) {
+      return;
+    }
+    setError("");
+    setNotice("");
+    try {
+      await api.delete(`/api/posts/${post.id}`);
+      setNotice(`Pos "${post.name}" berhasil dihapus.`);
+      if (editingPost?.id === post.id) closeForm();
+      fetchPosts(selectedSiteId);
+    } catch (err) {
+      setError(getErrorMessage(err, "Gagal menghapus pos."));
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  if (loadingSites) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-saas-text-muted font-medium">
+          Memuat data...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (sites.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Titik Pos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-saas-text-muted font-medium">
+            Belum ada site. Buat area terlebih dahulu di menu{" "}
+            <strong>Area (Sites)</strong>.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-6 pb-3 border-b border-saas-border">
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className="border-saas-border text-saas-text-muted font-mono tracking-wider"
+          >
+            POS
+          </Badge>
+          <h1 className="text-3xl font-bold tracking-tight text-saas-text">
+            Manajemen Titik Pos
+          </h1>
+        </div>
+        <div className="flex items-center gap-3">
+          {formMode === null && (
+            <Button onClick={openCreate}>
+              <Plus className="w-4 h-4 mr-2" />
+              Tambah Pos
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {notice && (
+        <Alert variant="success" className="mb-4">
+          <AlertDescription>{notice}</AlertDescription>
+        </Alert>
+      )}
+
+      {formMode !== null && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>
+              {formMode === "create"
+                ? "Tambah Pos Baru"
+                : `Edit Pos — ${editingPost?.name}`}
+            </CardTitle>
+            <CardDescription>
+              Isi detail pos dan tentukan lokasi pada peta
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {formError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="post-name">Nama Pos</Label>
+                  <Input
+                    id="post-name"
+                    type="text"
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, name: e.target.value }))
+                    }
+                    placeholder="Contoh: Pos Lobby"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="post-radius">Radius (meter, 5 - 500)</Label>
+                  <Input
+                    id="post-radius"
+                    type="number"
+                    min="5"
+                    max="500"
+                    value={form.radius_m}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, radius_m: e.target.value }))
+                    }
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Lokasi Pos</Label>
+                <div className="flex items-center gap-3 flex-wrap mb-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleUseMyLocation}
+                    disabled={geoLoading}
+                  >
+                    {geoLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Mengambil lokasi...
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Gunakan Lokasi Saya Saat Ini
+                      </>
+                    )}
+                  </Button>
+                  <span className="text-xs font-medium text-saas-text-muted">
+                    atau klik pada peta di bawah untuk memilih titik
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 max-w-[480px]">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-semibold text-saas-text-muted uppercase">
+                      Latitude
+                    </Label>
+                    <Input
+                      type="text"
+                      value={form.latitude}
+                      readOnly
+                      placeholder="-"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-semibold text-saas-text-muted uppercase">
+                      Longitude
+                    </Label>
+                    <Input
+                      type="text"
+                      value={form.longitude}
+                      readOnly
+                      placeholder="-"
+                    />
+                  </div>
+                </div>
+                {pointInside === false && (
+                  <Alert variant="warning">
+                    <AlertDescription>
+                      ⚠ Titik yang dipilih berada DI LUAR polygon site. Server
+                      akan menolak penyimpanan.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {pointInside === true && (
+                  <Alert variant="success">
+                    <AlertDescription>
+                      ✓ Titik berada di dalam polygon site.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <PostLocationMap
+                  polygon={selectedSite?.polygon || []}
+                  posts={posts}
+                  picked={pickedPoint}
+                  onPick={handleMapPick}
+                  excludePostId={editingPost?.id}
+                  height={360}
+                />
+              </div>
+
+              {formMode === "edit" && (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={!!form.is_active}
+                    onCheckedChange={(checked) =>
+                      setForm((f) => ({ ...f, is_active: !!checked }))
+                    }
+                  />
+                  <Label>Pos aktif</Label>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Button type="submit" disabled={saving}>
+                  {saving ? "Menyimpan..." : "Simpan"}
+                </Button>
+                <Button type="button" variant="outline" onClick={closeForm}>
+                  Batal
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="mb-6 overflow-hidden">
+        <CardHeader>
+          <CardTitle>
+            Peta {selectedSite ? `— ${selectedSite.name}` : ""}
+          </CardTitle>
+          <CardDescription>
+            Visualisasi polygon site dan posisi titik pos
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <PostLocationMap
+            polygon={selectedSite?.polygon || []}
+            posts={posts}
+            picked={null}
+            onPick={null}
+            height={300}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Daftar Pos {selectedSite ? `— ${selectedSite.name}` : ""}
+          </CardTitle>
+          <CardDescription>Kelola pos patroli pada site ini</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingPosts ? (
+            <p className="text-saas-text-muted font-medium py-4">Memuat...</p>
+          ) : posts.length === 0 ? (
+            <p className="text-saas-text-muted font-medium py-4">
+              Belum ada pos pada site ini.
+            </p>
+          ) : (
+            <div className="overflow-x-auto border border-saas-border rounded-xl">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nama</TableHead>
+                    <TableHead>Koordinat</TableHead>
+                    <TableHead>Radius</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>QR</TableHead>
+                    <TableHead style={{ width: 180 }}>Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {posts.map((post) => (
+                    <TableRow
+                      key={post.id}
+                      className={!post.is_active ? "opacity-50" : ""}
+                    >
+                      <TableCell>{post.name}</TableCell>
+                      <TableCell className="text-xs font-mono">
+                        {Number(post.latitude).toFixed(6)},{" "}
+                        {Number(post.longitude).toFixed(6)}
+                      </TableCell>
+                      <TableCell>{post.radius_m} m</TableCell>
+                      <TableCell>
+                        <Badge variant={post.is_active ? "success" : "muted"}>
+                          {post.is_active ? "Aktif" : "Nonaktif"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setQrPost(post)}
+                        >
+                          <QrCode className="w-4 h-4 mr-1" />
+                          Lihat QR
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEdit(post)}
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(post)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Hapus
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {qrPost && (
+        <Modal
+          title={`QR Code — ${qrPost.name}`}
+          onClose={() => setQrPost(null)}
+          footer={
+            <>
+              <Button onClick={handlePrint}>
+                <Printer className="w-4 h-4 mr-2" />
+                Print
+              </Button>
+              <Button variant="outline" onClick={() => setQrPost(null)}>
+                Tutup
+              </Button>
+            </>
+          }
+        >
+          <div className="flex flex-col items-center gap-3">
+            <div
+              id="qr-print-area"
+              className="flex flex-col items-center gap-2.5 p-5 border-2 border-dashed border-brutal-black rounded-brutal bg-saas-bg-secondary"
+            >
+              <QRCodeSVG
+                value={`PATROLI:${qrPost.qr_token}`}
+                size={256}
+                level="M"
+                includeMargin
+              />
+              <div className="text-lg font-semibold text-saas-text">
+                {qrPost.name}
+              </div>
+              {selectedSite && (
+                <div className="text-xs font-mono text-saas-text-muted">
+                  {selectedSite.name}
+                </div>
+              )}
+            </div>
+            {!qrPost.qr_token && (
+              <Alert variant="warning">
+                <AlertDescription>
+                  qr_token tidak tersedia (hanya dikirim untuk role admin).
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}

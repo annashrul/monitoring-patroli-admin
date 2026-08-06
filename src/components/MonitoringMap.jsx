@@ -1,0 +1,111 @@
+import { Fragment } from 'react';
+import { MapContainer, TileLayer, Polygon, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import FitBounds from './FitBounds';
+import { Badge } from './ui/badge';
+
+const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTR =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function pinSvg(color) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 28 16 28s16-16 16-28C32 7.16 24.84 0 16 0z" fill="${color}" stroke="#fff" stroke-width="3"/><circle cx="16" cy="14" r="5" fill="#fff"/></svg>`;
+}
+
+function pinIcon(color) {
+  return L.divIcon({
+    className: 'post-marker-icon',
+    html: `<div style="width:32px;height:32px;filter:drop-shadow(2px 2px 0 rgba(0,0,0,0.3));">${pinSvg(color)}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+}
+
+function smallPinIcon(color) {
+  return L.divIcon({
+    className: 'post-marker-icon',
+    html: `<div style="width:22px;height:22px;filter:drop-shadow(1px 1px 0 rgba(0,0,0,0.3));">${pinSvg(color).replace('width="32" height="32"', 'width="22" height="22"')}</div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 22],
+    popupAnchor: [0, -22],
+  });
+}
+
+function formatTime(iso) {
+  if (!iso) return '-';
+  try {
+    return new Date(iso).toLocaleString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+export default function MonitoringMap({ site, posts, height = "min(520px, 70vh)" }) {
+  const polygon = site?.polygon || [];
+  const center =
+    polygon.length > 0
+      ? [polygon[0].lat, polygon[0].lng]
+      : [-6.2, 106.816];
+
+  const containerHeight = typeof height === 'number' ? `${height}px` : height;
+  return (
+    <div className="rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
+      <MapContainer center={center} zoom={16} style={{ height: '100%', width: '100%' }}>
+        <TileLayer url={OSM_URL} attribution={OSM_ATTR} />
+        {polygon.length >= 3 && (
+          <>
+            <Polygon
+              positions={polygon.map((p) => [p.lat, p.lng])}
+              pathOptions={{ color: '#1e3a5f', weight: 2, fillOpacity: 0.06 }}
+            />
+            <FitBounds polygon={polygon} />
+          </>
+        )}
+        {posts.map((post) => (
+          <Marker
+            key={post.id}
+            position={[post.latitude, post.longitude]}
+            icon={pinIcon(post.status === 'scanned' ? '#16a34a' : '#dc2626')}
+          >
+            <Popup>
+              <div className="text-sm font-sans">
+                <strong>{post.name}</strong>
+                <div className="mt-1">
+                  Status:{' '}
+                  <Badge variant={post.status === 'scanned' ? 'success' : 'destructive'}>
+                    {post.status === 'scanned' ? 'Sudah Discan' : 'Belum Discan'}
+                  </Badge>
+                </div>
+                <div className="mt-1">Radius: {post.radius_m} m</div>
+                {post.last_scan ? (
+                  <div className="mt-1">
+                    Scan terakhir: {formatTime(post.last_scan.scanned_at)}
+                    <br />
+                    oleh {post.last_scan.scanned_by_name}
+                  </div>
+                ) : (
+                  <div className="mt-1">Belum ada scan pada shift ini</div>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+  );
+}

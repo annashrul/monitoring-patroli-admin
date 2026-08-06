@@ -1,0 +1,393 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brutal-border: #000000;
+    --brutal-shadow: 4px 4px 0px #000000;
+    --brutal-shadow-sm: 2px 2px 0px #000000;
+    --brutal-shadow-lg: 6px 6px 0px #000000;
+  }
+
+  * {
+    border-color: #000000;
+  }
+
+  body {
+    @apply bg-saas-bg text-saas-text antialiased font-sans;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  input,
+  select,
+  textarea {
+    @apply text-saas-text;
+    color-scheme: dark;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-saas-text-light;
+  }
+
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    @apply text-saas-text;
+    color-scheme: dark;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    opacity: 0.6;
+    cursor: pointer;
+  }
+
+  option {
+    @apply bg-saas-bg-secondary text-saas-text;
+  }
+
+  ::selection {
+    @apply bg-saas-primary text-brutal-black;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-saas-primary ring-offset-0;
+  }
+}
+
+@layer components {
+  /* ===== NEO BRUTALISM CARDS ===== */
+  .saas-card {
+    @apply rounded-brutal border-2 border-brutal-black bg-saas-bg-secondary shadow-brutal;
+  }
+
+  .saas-card-hover {
+    @apply transition-all duration-100 hover:shadow-brutal-hover hover:-translate-y-0.5 hover:-translate-x-0.5;
+  }
+
+  /* ===== NEO BRUTALISM INPUTS ===== */
+  .saas-input {
+    @apply flex h-11 w-full rounded-brutal border-2 border-brutal-black bg-saas-bg-secondary px-3 py-2 text-sm text-saas-text font-medium
+           shadow-brutal-sm
+           transition-all duration-100
+           focus:outline-none focus:ring-2 focus:ring-saas-primary focus:shadow-brutal
+           disabled:cursor-not-allowed disabled:opacity-50
+           placeholder:text-saas-text-light;
+  }
+
+  /* ===== NEO BRUTALISM BUTTONS ===== */
+  .saas-btn {
+    @apply inline-flex items-center justify-center gap-2 font-bold text-sm rounded-brutal border-2 border-brutal-black
+           shadow-brutal
+           transition-all duration-100
+           hover:shadow-brutal-hover hover:-translate-y-0.5 hover:-translate-x-0.5
+           active:shadow-brutal-active active:translate-y-0.5 active:translate-x-0.5
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saas-primary
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0;
+  }
+
+  .saas-btn-primary {
+    @apply saas-btn bg-saas-primary text-brutal-black hover:bg-saas-primary-hover;
+  }
+
+  .saas-btn-outline {
+    @apply saas-btn bg-saas-bg-secondary text-saas-text hover:bg-saas-bg-tertiary;
+  }
+
+  .saas-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 font-bold text-sm rounded-brutal
+           text-saas-text-muted border-2 border-transparent
+           transition-all duration-100
+           hover:bg-saas-bg-tertiary hover:text-saas-text hover:border-brutal-black hover:shadow-brutal-sm;
+  }
+
+  .saas-btn-danger {
+    @apply saas-btn bg-saas-danger text-white hover:bg-red-600;
+  }
+
+  /* ===== NEO BRUTALISM BADGES ===== */
+  .saas-badge {
+    @apply inline-flex items-center rounded-brutal border-2 border-brutal-black px-2.5 py-0.5 text-xs font-bold shadow-brutal-sm;
+  }
+
+  .saas-badge-success {
+    @apply saas-badge bg-saas-success text-brutal-black;
+  }
+
+  .saas-badge-warning {
+    @apply saas-badge bg-saas-warning text-brutal-black;
+  }
+
+  .saas-badge-danger {
+    @apply saas-badge bg-saas-danger text-white;
+  }
+
+  .saas-badge-info {
+    @apply saas-badge bg-saas-info text-white;
+  }
+
+  .saas-badge-muted {
+    @apply saas-badge bg-saas-bg-tertiary text-saas-text-muted;
+  }
+
+  .saas-badge-outline {
+    @apply saas-badge bg-transparent text-saas-text;
+  }
+
+  /* ===== NEO BRUTALISM TABLE ===== */
+  .saas-table {
+    @apply w-full caption-bottom text-sm;
+  }
+
+  .saas-table-container {
+    @apply relative w-full overflow-auto rounded-brutal border-2 border-brutal-black shadow-brutal;
+  }
+
+  .saas-table-header {
+    @apply [&_tr]:border-b-2 [&_tr]:border-brutal-black;
+  }
+
+  .saas-table-body {
+    @apply [&_tr:last-child]:border-0;
+  }
+
+  .saas-table-row {
+    @apply border-b-2 border-brutal-black transition-colors hover:bg-saas-bg-tertiary/30;
+  }
+
+  .saas-table-head {
+    @apply h-12 px-4 text-left align-middle text-xs font-extrabold uppercase tracking-wider text-saas-primary bg-saas-bg-secondary;
+  }
+
+  .saas-table-cell {
+    @apply px-4 py-3 align-middle text-sm font-medium;
+  }
+
+  /* ===== PAGE LAYOUT ===== */
+  .saas-page-header {
+    @apply flex items-center justify-between flex-wrap gap-3 mb-6 pb-4 border-b-2 border-brutal-black;
+  }
+
+  .saas-page-title {
+    @apply text-3xl font-black tracking-tight text-saas-text uppercase;
+  }
+
+  .saas-section-title {
+    @apply text-xl font-extrabold text-saas-text uppercase;
+  }
+
+  .saas-card-title {
+    @apply text-lg font-bold text-saas-text;
+  }
+
+  .saas-body {
+    @apply text-sm text-saas-text-muted font-medium;
+  }
+
+  .saas-label {
+    @apply text-sm font-bold text-saas-text uppercase tracking-wide;
+  }
+
+  .saas-empty {
+    @apply text-center py-8 text-saas-text-muted font-bold;
+  }
+
+  .saas-loading {
+    @apply text-center py-8 text-saas-text-muted font-bold;
+  }
+
+  .saas-divider {
+    @apply border-brutal-black border-t-2;
+  }
+
+  .saas-input-label {
+    @apply block text-sm font-bold text-saas-text mb-1.5 uppercase tracking-wide;
+  }
+
+  .saas-input-error {
+    @apply border-saas-danger focus:border-saas-danger focus:ring-saas-danger;
+  }
+
+  /* ===== NEO BRUTALISM ALERTS ===== */
+  .saas-alert {
+    @apply rounded-brutal border-2 border-brutal-black p-4 shadow-brutal-sm font-bold;
+  }
+
+  .saas-alert-success {
+    @apply saas-alert bg-saas-success text-brutal-black;
+  }
+
+  .saas-alert-warning {
+    @apply saas-alert bg-saas-warning text-brutal-black;
+  }
+
+  .saas-alert-danger {
+    @apply saas-alert bg-saas-danger text-white;
+  }
+
+  .saas-alert-info {
+    @apply saas-alert bg-saas-info text-white;
+  }
+
+  /* ===== NEO BRUTALISM SIDEBAR ===== */
+  .saas-sidebar {
+    @apply w-64 bg-saas-bg-secondary border-r-3 border-brutal-black flex flex-col fixed top-0 left-0 bottom-0 z-50;
+  }
+
+  .saas-sidebar-logo {
+    @apply flex items-center gap-3 px-5 py-5 border-b-2 border-brutal-black;
+  }
+
+  .saas-sidebar-nav {
+    @apply flex-1 px-3 py-4 flex flex-col gap-1;
+  }
+
+  .saas-sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-brutal text-sm font-bold transition-all duration-100 border-2 border-transparent;
+  }
+
+  .saas-sidebar-item-active {
+    @apply saas-sidebar-item bg-saas-primary text-brutal-black border-brutal-black shadow-brutal-sm;
+  }
+
+  .saas-sidebar-item-inactive {
+    @apply saas-sidebar-item text-saas-text-muted hover:bg-saas-bg-tertiary hover:text-saas-text hover:border-brutal-black hover:shadow-brutal-sm;
+  }
+
+  .saas-sidebar-footer {
+    @apply px-4 py-4 border-t-2 border-brutal-black;
+  }
+
+  .saas-main {
+    @apply flex-1 ml-64 p-8;
+  }
+
+  /* ===== NEO BRUTALISM TOPBAR ===== */
+  .saas-topbar {
+    @apply sticky top-0 z-40 flex h-16 items-center justify-between px-4 bg-saas-bg-secondary border-b-3 border-brutal-black;
+  }
+
+  .saas-topbar-search {
+    @apply flex-1 max-w-md;
+  }
+
+  .saas-topbar-actions {
+    @apply flex items-center gap-2;
+  }
+
+  .saas-topbar-btn {
+    @apply p-2 rounded-brutal text-saas-text-muted border-2 border-transparent hover:border-brutal-black hover:bg-saas-bg-tertiary hover:text-saas-text hover:shadow-brutal-sm transition-all duration-100;
+  }
+
+  .saas-avatar {
+    @apply w-8 h-8 rounded-brutal bg-saas-primary border-2 border-brutal-black flex items-center justify-center text-brutal-black text-sm font-black shadow-brutal-sm;
+  }
+
+  .saas-dropdown {
+    @apply absolute right-0 mt-2 w-56 rounded-brutal border-2 border-brutal-black bg-saas-bg-secondary shadow-brutal py-1;
+  }
+
+  .saas-dropdown-item {
+    @apply flex items-center gap-2 px-3 py-2 text-sm font-bold text-saas-text hover:bg-saas-primary hover:text-brutal-black transition-all duration-100;
+  }
+
+  /* ===== NEO BRUTALISM TABS ===== */
+  .saas-tabs {
+    @apply flex gap-1 bg-saas-bg-secondary p-1 rounded-brutal border-2 border-brutal-black;
+  }
+
+  .saas-tab {
+    @apply px-3 py-2 text-sm font-bold rounded-brutal text-saas-text-muted border-2 border-transparent hover:text-saas-text hover:bg-saas-bg-tertiary hover:border-brutal-black transition-all duration-100;
+  }
+
+  .saas-tab-active {
+    @apply saas-tab bg-saas-primary text-brutal-black border-brutal-black shadow-brutal-sm;
+  }
+
+  /* ===== NEO BRUTALISM MODAL ===== */
+  .saas-modal-overlay {
+    @apply fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4;
+  }
+
+  .saas-modal {
+    @apply bg-saas-bg-secondary rounded-brutal border-3 border-brutal-black shadow-brutal-lg max-w-lg w-full max-h-[90vh] overflow-auto;
+  }
+
+  .saas-modal-header {
+    @apply px-6 py-4 border-b-2 border-brutal-black;
+  }
+
+  .saas-modal-title {
+    @apply text-lg font-black text-saas-text uppercase;
+  }
+
+  .saas-modal-content {
+    @apply p-6;
+  }
+
+  .saas-modal-footer {
+    @apply px-6 py-4 border-t-2 border-brutal-black flex justify-end gap-3;
+  }
+
+  .saas-skeleton {
+    @apply animate-pulse bg-saas-bg-tertiary rounded-brutal border-2 border-brutal-black;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #facc15 #1a1a2e;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #1a1a2e;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #facc15;
+    border-radius: 0px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: #eab308;
+  }
+}
+
+/* ===== LEAFLET MAP Z-INDEX FIX ===== */
+.leaflet-container {
+  z-index: 1 !important;
+}
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+  z-index: 1 !important;
+}
+.leaflet-control {
+  z-index: 2 !important;
+}
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 2 !important;
+}

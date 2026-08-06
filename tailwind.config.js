@@ -1,0 +1,73 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{jsx,tsx}"],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "Consolas", "monospace"],
+      },
+      colors: {
+        saas: {
+          bg: "#1a1a2e",
+          "bg-secondary": "#16213e",
+          "bg-tertiary": "#0f3460",
+          card: "#1a1a2e",
+          border: "#000000",
+          text: "#ffffff",
+          "text-muted": "#a0a0b8",
+          "text-light": "#6b6b80",
+          primary: "#FACC15",
+          "primary-hover": "#EAB308",
+          "primary-light": "rgba(250, 204, 21, 0.15)",
+          success: "#22C55E",
+          "success-light": "rgba(34, 197, 94, 0.15)",
+          warning: "#F59E0B",
+          "warning-light": "rgba(245, 158, 11, 0.15)",
+          danger: "#EF4444",
+          "danger-light": "rgba(239, 68, 68, 0.15)",
+          info: "#3B82F6",
+          "info-light": "rgba(59, 130, 246, 0.15)",
+        },
+        brutal: {
+          bg: "#1a1a2e",
+          card: "#16213e",
+          border: "#000000",
+          accent: "#FACC15",
+          pink: "#EC4899",
+          blue: "#3B82F6",
+          green: "#22C55E",
+          orange: "#F97316",
+          purple: "#A855F7",
+          black: "#000000",
+          white: "#ffffff",
+          muted: "#a0a0b8",
+        },
+      },
+      borderWidth: {
+        3: "3px",
+      },
+      borderRadius: {
+        brutal: "8px",
+        xl: "8px",
+        "2xl": "12px",
+      },
+      boxShadow: {
+        brutal: "4px 4px 0px #000000",
+        "brutal-sm": "2px 2px 0px #000000",
+        "brutal-lg": "6px 6px 0px #000000",
+        "brutal-xl": "8px 8px 0px #000000",
+        "brutal-primary": "4px 4px 0px #FACC15",
+        "brutal-hover": "6px 6px 0px #000000",
+        "brutal-active": "2px 2px 0px #000000",
+        card: "4px 4px 0px #000000",
+        "card-hover": "6px 6px 0px #000000",
+      },
+      transitionDuration: {
+        fast: "100ms",
+        normal: "150ms",
+      },
+    },
+  },
+  plugins: [],
+};
