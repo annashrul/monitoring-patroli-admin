@@ -240,7 +240,32 @@ export default function Posts() {
   };
 
   const handlePrint = () => {
-    window.print();
+    const printArea = document.getElementById("qr-print-area");
+    if (!printArea) return;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      alert("Pop-up diblokir. Izinkan pop-up untuk mencetak QR.");
+      return;
+    }
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>QR - ${qrPost.name}</title>
+        <style>
+          @page { margin: 0; size: auto; }
+          body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+          #qr-print-area { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border: 2px solid #000; }
+          #qr-print-area svg { width: 420px !important; height: 420px !important; }
+        </style>
+      </head>
+      <body>${printArea.outerHTML}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
   };
 
   if (loadingSites) {
@@ -581,7 +606,7 @@ export default function Posts() {
             >
               <QRCodeSVG
                 value={`PATROLI:${qrPost.qr_token}`}
-                size={256}
+                size={380}
                 level="M"
                 includeMargin
               />

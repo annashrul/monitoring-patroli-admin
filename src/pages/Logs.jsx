@@ -136,7 +136,7 @@ export default function Logs() {
           >
             LOG
           </Badge>
-          <h1 className="text-2xl font-bold tracking-tight text-brutal-black">
+          <h1 className="text-2xl font-bold tracking-tight text-saas-text">
             Riwayat Scan
           </h1>
         </div>

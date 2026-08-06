@@ -163,7 +163,7 @@ export default function Users() {
           >
             USER
           </Badge>
-          <h1 className="text-2xl font-bold tracking-tight text-brutal-black">
+          <h1 className="text-2xl font-bold tracking-tight text-saas-text">
             Manajemen Pengguna
           </h1>
         </div>
@@ -238,15 +238,18 @@ export default function Users() {
                 <div className="space-y-2">
                   <Label htmlFor="new-role">Role</Label>
                   <Select
-                    id="new-role"
                     value={createForm.role}
-                    onChange={(e) =>
-                      setCreateForm((f) => ({ ...f, role: e.target.value }))
+                    onValueChange={(val) =>
+                      setCreateForm((f) => ({ ...f, role: val }))
                     }
-                    required
                   >
-                    <option value="satpam">Satpam</option>
-                    <option value="admin">Admin</option>
+                    <Select.Trigger id="new-role">
+                      <Select.Value />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="satpam">Satpam</Select.Item>
+                      <Select.Item value="admin">Admin</Select.Item>
+                    </Select.Content>
                   </Select>
                 </div>
               </div>
@@ -291,15 +294,18 @@ export default function Users() {
                 <div className="space-y-2">
                   <Label htmlFor="edit-role">Role</Label>
                   <Select
-                    id="edit-role"
                     value={editForm.role}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, role: e.target.value }))
+                    onValueChange={(val) =>
+                      setEditForm((f) => ({ ...f, role: val }))
                     }
-                    required
                   >
-                    <option value="satpam">Satpam</option>
-                    <option value="admin">Admin</option>
+                    <Select.Trigger id="edit-role">
+                      <Select.Value />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="satpam">Satpam</Select.Item>
+                      <Select.Item value="admin">Admin</Select.Item>
+                    </Select.Content>
                   </Select>
                 </div>
               </div>

@@ -139,7 +139,7 @@ export default function Shifts() {
           >
             SHIFT
           </Badge>
-          <h1 className="text-2xl font-bold tracking-tight text-brutal-black">
+          <h1 className="text-2xl font-bold tracking-tight text-saas-text">
             Manajemen Shift
           </h1>
         </div>
