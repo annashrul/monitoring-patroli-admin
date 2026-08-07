@@ -4,10 +4,12 @@ import L from 'leaflet';
 import FitBounds from './FitBounds';
 import { Badge } from './ui/badge';
 import { Skeleton } from './ui/skeleton';
+import { Button } from './ui/button';
 
-const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-const OSM_ATTR =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const KEY = 'AIzaSyDqD1Z03FoLnIGJTbpAgRvjcchrR-NiICk';
+const GMAP_URL = `https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${KEY}`;
+const GSAT_URL = `https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=${KEY}`;
+const ATTR = '&copy; Google';
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -58,18 +60,25 @@ function formatTime(iso) {
 
 export default function MonitoringMap({ site, posts, height = "min(520px, 70vh)" }) {
   const polygon = site?.polygon || [];
+  const [mapReady, setMapReady] = useState(false);
+  const [satellite, setSatellite] = useState(false);
   const center =
     polygon.length > 0
       ? [polygon[0].lat, polygon[0].lng]
       : [-6.2, 106.816];
 
-  const [mapReady, setMapReady] = useState(false);
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
   return (
     <div className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
       {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
-      <MapContainer center={center} zoom={16} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
-        <TileLayer url={OSM_URL} attribution={OSM_ATTR} />
+      <MapContainer center={center} zoom={16} maxZoom={21} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
+        <TileLayer
+          url={satellite ? GSAT_URL : GMAP_URL}
+          attribution={ATTR}
+          maxZoom={21}
+          maxNativeZoom={20}
+          subdomains={['0', '1', '2', '3']}
+        />
         {polygon.length >= 3 && (
           <>
             <Polygon
@@ -109,6 +118,24 @@ export default function MonitoringMap({ site, posts, height = "min(520px, 70vh)"
           </Marker>
         ))}
       </MapContainer>
+      <div className="absolute bottom-4 left-2 z-[999] flex gap-1">
+        <Button
+          size="sm"
+          variant={satellite ? "outline" : "default"}
+          onClick={() => setSatellite(false)}
+          className="text-xs h-7 px-2"
+        >
+          Peta
+        </Button>
+        <Button
+          size="sm"
+          variant={satellite ? "default" : "outline"}
+          onClick={() => setSatellite(true)}
+          className="text-xs h-7 px-2"
+        >
+          Satelit
+        </Button>
+      </div>
     </div>
   );
 }

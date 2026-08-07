@@ -17,7 +17,7 @@ function pinIcon() {
   });
 }
 
-export default function CurrentLocation({ enabled = true, zoom = 17 }) {
+export default function CurrentLocation({ enabled = true, zoom = 19 }) {
   const map = useMap();
   const [position, setPosition] = useState(null);
 

@@ -5,30 +5,27 @@ import L from 'leaflet';
 import FitBounds from './FitBounds';
 import CurrentLocation from './CurrentLocation';
 import { Skeleton } from './ui/skeleton';
+import { Button } from './ui/button';
 
-const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-const OSM_ATTR =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const KEY = 'AIzaSyDqD1Z03FoLnIGJTbpAgRvjcchrR-NiICk';
+const GMAP_URL = `https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${KEY}`;
+const GSAT_URL = `https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=${KEY}`;
+const ATTR = '&copy; Google';
 
 function layerToPolygon(layer) {
   const latlngs = layer.getLatLngs()[0] || [];
   return latlngs.map((ll) => ({ lat: ll.lat, lng: ll.lng }));
 }
 
-/**
- * Peta untuk menggambar / mengedit polygon site memakai leaflet-draw.
- * value: [{lat,lng}, ...]; onChange dipanggil dengan format yang sama.
- * Parent disarankan memberi `key` yang berubah saat berpindah site agar state bersih.
- */
 export default function SitePolygonEditor({ value, onChange, height = "min(420px, 70vh)" }) {
   const fgRef = useRef(null);
   const [mapReady, setMapReady] = useState(false);
+  const [satellite, setSatellite] = useState(false);
   const center =
     Array.isArray(value) && value.length > 0
       ? [value[0].lat, value[0].lng]
       : [-6.2, 106.816];
 
-  // Tampilkan polygon existing ke dalam FeatureGroup (mode edit).
   useEffect(() => {
     const fg = fgRef.current;
     if (!fg) return;
@@ -37,14 +34,12 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
       const layer = L.polygon(value.map((p) => [p.lat, p.lng]));
       fg.addLayer(layer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCreated = (e) => {
     if (e.layerType !== 'polygon') return;
     const fg = fgRef.current;
     if (!fg) return;
-    // Hanya boleh satu polygon: hapus yang lama
     fg.clearLayers();
     fg.addLayer(e.layer);
     onChange(layerToPolygon(e.layer));
@@ -67,13 +62,18 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
   return (
     <div className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
       {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
-      <MapContainer center={center} zoom={15} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
-        <TileLayer url={OSM_URL} attribution={OSM_ATTR} />
+      <MapContainer center={center} zoom={18} maxZoom={21} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
+        <TileLayer
+          url={satellite ? GSAT_URL : GMAP_URL}
+          attribution={ATTR}
+          maxZoom={21}
+          maxNativeZoom={20}
+          subdomains={['0', '1', '2', '3']}
+        />
         {Array.isArray(value) && value.length >= 3 ? (
           <FitBounds polygon={value} />
         ) : (
-          // Belum ada polygon -> pusatkan peta ke lokasi admin saat ini
-          <CurrentLocation />
+          <CurrentLocation zoom={19} />
         )}
         <FeatureGroup ref={fgRef}>
           <EditControl
@@ -92,12 +92,27 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
               marker: false,
               circlemarker: false,
             }}
-            // Catatan: jangan isi prop `edit` dengan boolean true/false —
-            // leaflet-draw mengharapkan object konfigurasi. Dibiarkan kosong
-            // agar tombol edit & hapus aktif dengan pengaturan default.
           />
         </FeatureGroup>
       </MapContainer>
+      <div className="absolute bottom-4 left-2 z-[999] flex gap-1">
+        <Button
+          size="sm"
+          variant={satellite ? "outline" : "default"}
+          onClick={() => setSatellite(false)}
+          className="text-xs h-7 px-2"
+        >
+          Peta
+        </Button>
+        <Button
+          size="sm"
+          variant={satellite ? "default" : "outline"}
+          onClick={() => setSatellite(true)}
+          className="text-xs h-7 px-2"
+        >
+          Satelit
+        </Button>
+      </div>
     </div>
   );
 }
