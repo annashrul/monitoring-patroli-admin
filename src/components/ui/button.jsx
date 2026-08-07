@@ -20,9 +20,9 @@ const Button = React.forwardRef(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saas-primary",
           "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0",
           variant === "default" &&
-            "bg-saas-primary text-brutal-black shadow-brutal hover:shadow-brutal-hover hover:-translate-y-0.5 hover:-translate-x-0.5 active:shadow-brutal-active active:translate-y-0.5 active:translate-x-0.5",
+            "bg-saas-primary text-white shadow-brutal hover:shadow-brutal-hover hover:-translate-y-0.5 hover:-translate-x-0.5 active:shadow-brutal-active active:translate-y-0.5 active:translate-x-0.5",
           variant === "primary" &&
-            "bg-saas-primary text-brutal-black shadow-brutal hover:shadow-brutal-hover hover:-translate-y-0.5 hover:-translate-x-0.5 active:shadow-brutal-active active:translate-y-0.5 active:translate-x-0.5",
+            "bg-saas-primary text-white shadow-brutal hover:shadow-brutal-hover hover:-translate-y-0.5 hover:-translate-x-0.5 active:shadow-brutal-active active:translate-y-0.5 active:translate-x-0.5",
           variant === "destructive" &&
             "bg-saas-danger text-white shadow-brutal hover:shadow-brutal-hover hover:-translate-y-0.5 hover:-translate-x-0.5 active:shadow-brutal-active active:translate-y-0.5 active:translate-x-0.5",
           variant === "outline" &&

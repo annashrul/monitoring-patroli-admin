@@ -12,6 +12,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
+import { Skeleton } from "../components/ui/skeleton";
 import {
   Table,
   TableHeader,
@@ -21,6 +22,7 @@ import {
   TableCell,
 } from "../components/ui/table";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import Modal from "../components/Modal";
 import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, MapPin } from "lucide-react";
 
 const EMPTY_FORM = { name: "", polygon: [] };
@@ -155,7 +157,7 @@ export default function Sites() {
           <Badge variant="outline" className="border-saas-border text-saas-text-muted font-mono tracking-wider">
             SITE
           </Badge>
-          <h1 className="text-3xl font-bold tracking-tight text-saas-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">
             Manajemen Area (Sites)
           </h1>
         </div>
@@ -179,64 +181,60 @@ export default function Sites() {
       )}
 
       {formMode !== null && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>
-              {formMode === "create" ? "Tambah Site Baru" : "Edit Site"}
-            </CardTitle>
-            <CardDescription>
-              Isi nama site dan gambar polygon area pada peta di bawah
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {formError && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="site-name">Nama Site</Label>
-                <Input
-                  id="site-name"
-                  type="text"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  placeholder="Contoh: Kawasan Pabrik Cikarang"
-                  required
-                />
+        <Modal
+          title={formMode === "create" ? "Tambah Site Baru" : "Edit Site"}
+          onClose={closeForm}
+          wide
+          footer={
+            <div className="flex gap-3">
+              <Button type="submit" form="site-form" disabled={saving}>
+                {saving ? "Menyimpan..." : "Simpan"}
+              </Button>
+              <Button type="button" variant="outline" onClick={closeForm}>
+                Batal
+              </Button>
+            </div>
+          }
+        >
+          {formError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{formError}</AlertDescription>
+            </Alert>
+          )}
+          <form id="site-form" onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="site-name">Nama Site</Label>
+              <Input
+                id="site-name"
+                type="text"
+                value={form.name}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, name: e.target.value }))
+                }
+                placeholder="Contoh: Kawasan Pabrik Cikarang"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                Polygon Area{" "}
+                <span className="text-xs font-medium text-saas-text-muted">
+                  (gunakan toolbar di kanan atas peta untuk menggambar /
+                  mengedit; minimal 3 titik)
+                </span>
+              </Label>
+              <SitePolygonEditor
+                key={editingId || "new"}
+                value={form.polygon}
+                onChange={(poly) => setForm((f) => ({ ...f, polygon: poly }))}
+                height={360}
+              />
+              <div className="text-xs font-medium text-saas-text-muted">
+                Jumlah titik polygon: {form.polygon.length}
               </div>
-              <div className="space-y-2">
-                <Label>
-                  Polygon Area{" "}
-                  <span className="text-xs font-medium text-saas-text-muted">
-                    (gunakan toolbar di kanan atas peta untuk menggambar /
-                    mengedit; minimal 3 titik)
-                  </span>
-                </Label>
-                <SitePolygonEditor
-                  key={editingId || "new"}
-                  value={form.polygon}
-                  onChange={(poly) => setForm((f) => ({ ...f, polygon: poly }))}
-                  height={420}
-                />
-                <div className="text-xs font-medium text-saas-text-muted">
-                  Jumlah titik polygon: {form.polygon.length}
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Button type="submit" disabled={saving}>
-                  {saving ? "Menyimpan..." : "Simpan"}
-                </Button>
-                <Button type="button" variant="outline" onClick={closeForm}>
-                  Batal
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
+          </form>
+        </Modal>
       )}
 
       <Card>
@@ -246,7 +244,11 @@ export default function Sites() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-saas-text-muted font-medium">Memuat...</p>
+            <div className="space-y-2 py-2">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
           ) : sites.length === 0 ? (
             <p className="text-saas-text-muted font-medium">Belum ada site.</p>
           ) : (
@@ -257,7 +259,7 @@ export default function Sites() {
                     <TableHead>Nama</TableHead>
                     <TableHead>Jumlah Titik Polygon</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead style={{ width: 280 }}>Aksi</TableHead>
+                    <TableHead className="min-w-[130px] sm:min-w-[280px]">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -282,14 +284,14 @@ export default function Sites() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 sm:gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => openEdit(site)}
                           >
-                            <Edit className="w-4 h-4 mr-1" />
-                            Edit
+                            <Edit className="w-4 h-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Edit</span>
                           </Button>
                           <Button
                             variant="outline"
@@ -298,13 +300,13 @@ export default function Sites() {
                           >
                             {site.is_active ? (
                               <>
-                                <ToggleLeft className="w-4 h-4 mr-1" />
-                                Nonaktifkan
+                                <ToggleLeft className="w-4 h-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Nonaktifkan</span>
                               </>
                             ) : (
                               <>
-                                <ToggleRight className="w-4 h-4 mr-1" />
-                                Aktifkan
+                                <ToggleRight className="w-4 h-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Aktifkan</span>
                               </>
                             )}
                           </Button>
@@ -313,8 +315,8 @@ export default function Sites() {
                             size="sm"
                             onClick={() => handleDelete(site)}
                           >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Hapus
+                            <Trash2 className="w-4 h-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Hapus</span>
                           </Button>
                         </div>
                       </TableCell>

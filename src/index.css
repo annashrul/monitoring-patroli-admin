@@ -25,7 +25,6 @@
   select,
   textarea {
     @apply text-saas-text;
-    color-scheme: dark;
   }
 
   input::placeholder,
@@ -33,26 +32,12 @@
     @apply text-saas-text-light;
   }
 
-  input[type="date"],
-  input[type="time"],
-  input[type="datetime-local"] {
-    @apply text-saas-text;
-    color-scheme: dark;
-  }
-
-  input[type="date"]::-webkit-calendar-picker-indicator,
-  input[type="time"]::-webkit-calendar-picker-indicator,
-  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    opacity: 0.6;
-    cursor: pointer;
-  }
-
   option {
     @apply bg-saas-bg-secondary text-saas-text;
   }
 
   ::selection {
-    @apply bg-saas-primary text-brutal-black;
+    @apply bg-saas-primary text-white;
   }
 
   :focus-visible {
@@ -92,7 +77,7 @@
   }
 
   .saas-btn-primary {
-    @apply saas-btn bg-saas-primary text-brutal-black hover:bg-saas-primary-hover;
+    @apply saas-btn bg-saas-primary text-white hover:bg-saas-primary-hover;
   }
 
   .saas-btn-outline {
@@ -116,11 +101,11 @@
   }
 
   .saas-badge-success {
-    @apply saas-badge bg-saas-success text-brutal-black;
+    @apply saas-badge bg-saas-success text-white;
   }
 
   .saas-badge-warning {
-    @apply saas-badge bg-saas-warning text-brutal-black;
+    @apply saas-badge bg-saas-warning text-white;
   }
 
   .saas-badge-danger {
@@ -219,11 +204,11 @@
   }
 
   .saas-alert-success {
-    @apply saas-alert bg-saas-success text-brutal-black;
+    @apply saas-alert bg-saas-success text-white;
   }
 
   .saas-alert-warning {
-    @apply saas-alert bg-saas-warning text-brutal-black;
+    @apply saas-alert bg-saas-warning text-white;
   }
 
   .saas-alert-danger {
@@ -252,7 +237,7 @@
   }
 
   .saas-sidebar-item-active {
-    @apply saas-sidebar-item bg-saas-primary text-brutal-black border-brutal-black shadow-brutal-sm;
+    @apply saas-sidebar-item bg-saas-primary text-white border-brutal-black shadow-brutal-sm;
   }
 
   .saas-sidebar-item-inactive {
@@ -285,7 +270,7 @@
   }
 
   .saas-avatar {
-    @apply w-8 h-8 rounded-brutal bg-saas-primary border-2 border-brutal-black flex items-center justify-center text-brutal-black text-sm font-black shadow-brutal-sm;
+    @apply w-8 h-8 rounded-brutal bg-saas-primary border-2 border-brutal-black flex items-center justify-center text-white text-sm font-black shadow-brutal-sm;
   }
 
   .saas-dropdown {
@@ -293,7 +278,7 @@
   }
 
   .saas-dropdown-item {
-    @apply flex items-center gap-2 px-3 py-2 text-sm font-bold text-saas-text hover:bg-saas-primary hover:text-brutal-black transition-all duration-100;
+    @apply flex items-center gap-2 px-3 py-2 text-sm font-bold text-saas-text hover:bg-saas-primary hover:text-white transition-all duration-100;
   }
 
   /* ===== NEO BRUTALISM TABS ===== */
@@ -306,7 +291,7 @@
   }
 
   .saas-tab-active {
-    @apply saas-tab bg-saas-primary text-brutal-black border-brutal-black shadow-brutal-sm;
+    @apply saas-tab bg-saas-primary text-white border-brutal-black shadow-brutal-sm;
   }
 
   /* ===== NEO BRUTALISM MODAL ===== */

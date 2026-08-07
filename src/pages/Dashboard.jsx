@@ -13,6 +13,7 @@ import {
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import { Skeleton } from "../components/ui/skeleton";
 import {
   Table,
   TableHeader,
@@ -161,7 +162,7 @@ export default function Dashboard() {
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-saas-border">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-saas-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">
             Dashboard Monitoring
           </h1>
           <p className="text-saas-text-muted mt-1">
@@ -177,11 +178,19 @@ export default function Dashboard() {
       )}
 
       {loading ? (
-        <Card>
-          <CardContent className="p-8 text-center text-saas-text-muted font-medium">
-            Memuat data...
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : sites.length === 0 ? (
         <Card>
           <CardContent className="p-6">

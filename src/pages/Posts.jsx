@@ -26,6 +26,7 @@ import {
 } from "../components/ui/table";
 import { Checkbox } from "../components/ui/checkbox";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import { Skeleton } from "../components/ui/skeleton";
 import {
   Plus,
   Edit,
@@ -271,8 +272,17 @@ export default function Posts() {
   if (loadingSites) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-saas-text-muted font-medium">
-          Memuat data...
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-[360px] w-full" />
+          <div className="space-y-2">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
         </CardContent>
       </Card>
     );
@@ -304,7 +314,7 @@ export default function Posts() {
           >
             POS
           </Badge>
-          <h1 className="text-3xl font-bold tracking-tight text-saas-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">
             Manajemen Titik Pos
           </h1>
         </div>
@@ -330,24 +340,31 @@ export default function Posts() {
       )}
 
       {formMode !== null && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>
-              {formMode === "create"
-                ? "Tambah Pos Baru"
-                : `Edit Pos — ${editingPost?.name}`}
-            </CardTitle>
-            <CardDescription>
-              Isi detail pos dan tentukan lokasi pada peta
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <Modal
+          title={
+            formMode === "create"
+              ? "Tambah Pos Baru"
+              : `Edit Pos — ${editingPost?.name}`
+          }
+          onClose={closeForm}
+          wide
+          footer={
+            <div className="flex gap-3">
+              <Button type="submit" form="post-form" disabled={saving}>
+                {saving ? "Menyimpan..." : "Simpan"}
+              </Button>
+              <Button type="button" variant="outline" onClick={closeForm}>
+                Batal
+              </Button>
+            </div>
+          }
+        >
             {formError && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription>{formError}</AlertDescription>
               </Alert>
             )}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form id="post-form" onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="post-name">Nama Pos</Label>
@@ -467,17 +484,8 @@ export default function Posts() {
                 </div>
               )}
 
-              <div className="flex gap-3">
-                <Button type="submit" disabled={saving}>
-                  {saving ? "Menyimpan..." : "Simpan"}
-                </Button>
-                <Button type="button" variant="outline" onClick={closeForm}>
-                  Batal
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+          </form>
+        </Modal>
       )}
 
       <Card className="mb-6 overflow-hidden">
@@ -509,7 +517,11 @@ export default function Posts() {
         </CardHeader>
         <CardContent>
           {loadingPosts ? (
-            <p className="text-saas-text-muted font-medium py-4">Memuat...</p>
+            <div className="space-y-2 py-2">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
           ) : posts.length === 0 ? (
             <p className="text-saas-text-muted font-medium py-4">
               Belum ada pos pada site ini.
@@ -524,7 +536,7 @@ export default function Posts() {
                     <TableHead>Radius</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>QR</TableHead>
-                    <TableHead style={{ width: 180 }}>Aksi</TableHead>
+                    <TableHead className="min-w-[140px] sm:min-w-[180px]">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -604,12 +616,14 @@ export default function Posts() {
               id="qr-print-area"
               className="flex flex-col items-center gap-2.5 p-5 border-2 border-dashed border-brutal-black rounded-brutal bg-saas-bg-secondary"
             >
+              <div className="w-[min(80vw,380px)] [&_svg]:!w-full [&_svg]:!h-auto">
               <QRCodeSVG
                 value={`PATROLI:${qrPost.qr_token}`}
                 size={380}
                 level="M"
                 includeMargin
               />
+              </div>
               <div className="text-lg font-semibold text-saas-text">
                 {qrPost.name}
               </div>

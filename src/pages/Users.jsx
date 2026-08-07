@@ -12,6 +12,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select } from "../components/ui/select";
 import { Badge } from "../components/ui/badge";
+import { Skeleton } from "../components/ui/skeleton";
 import {
   Table,
   TableHeader,
@@ -22,6 +23,7 @@ import {
 } from "../components/ui/table";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Checkbox } from "../components/ui/checkbox";
+import Modal from "../components/Modal";
 
 const EMPTY_CREATE = { username: "", password: "", name: "", role: "satpam" };
 const EMPTY_EDIT = { name: "", role: "satpam", is_active: true, password: "" };
@@ -163,7 +165,7 @@ export default function Users() {
           >
             USER
           </Badge>
-          <h1 className="text-2xl font-bold tracking-tight text-saas-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">
             Manajemen Pengguna
           </h1>
         </div>
@@ -184,100 +186,109 @@ export default function Users() {
       )}
 
       {formMode === "create" && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Tambah Pengguna Baru</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {formError && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
-            )}
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-username">Username</Label>
-                  <Input
-                    id="new-username"
-                    type="text"
-                    value={createForm.username}
-                    onChange={(e) =>
-                      setCreateForm((f) => ({ ...f, username: e.target.value }))
-                    }
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">Password</Label>
-                  <Input
-                    id="new-password"
-                    type="password"
-                    value={createForm.password}
-                    onChange={(e) =>
-                      setCreateForm((f) => ({ ...f, password: e.target.value }))
-                    }
-                    autoComplete="new-password"
-                    required
-                  />
-                </div>
+        <Modal
+          title="Tambah Pengguna Baru"
+          onClose={closeForm}
+          footer={
+            <div className="flex gap-3">
+              <Button type="submit" form="user-create-form" disabled={saving}>
+                {saving ? "Menyimpan..." : "Simpan"}
+              </Button>
+              <Button type="button" variant="outline" onClick={closeForm}>
+                Batal
+              </Button>
+            </div>
+          }
+        >
+          {formError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{formError}</AlertDescription>
+            </Alert>
+          )}
+          <form id="user-create-form" onSubmit={handleCreate} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-username">Username</Label>
+                <Input
+                  id="new-username"
+                  type="text"
+                  value={createForm.username}
+                  onChange={(e) =>
+                    setCreateForm((f) => ({ ...f, username: e.target.value }))
+                  }
+                  required
+                />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-name">Nama Lengkap</Label>
-                  <Input
-                    id="new-name"
-                    type="text"
-                    value={createForm.name}
-                    onChange={(e) =>
-                      setCreateForm((f) => ({ ...f, name: e.target.value }))
-                    }
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-role">Role</Label>
-                  <Select
-                    value={createForm.role}
-                    onValueChange={(val) =>
-                      setCreateForm((f) => ({ ...f, role: val }))
-                    }
-                  >
-                    <Select.Trigger id="new-role">
-                      <Select.Value />
-                    </Select.Trigger>
-                    <Select.Content>
-                      <Select.Item value="satpam">Satpam</Select.Item>
-                      <Select.Item value="admin">Admin</Select.Item>
-                    </Select.Content>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={createForm.password}
+                  onChange={(e) =>
+                    setCreateForm((f) => ({ ...f, password: e.target.value }))
+                  }
+                  autoComplete="new-password"
+                  required
+                />
               </div>
-              <div className="flex gap-3">
-                <Button type="submit" disabled={saving}>
-                  {saving ? "Menyimpan..." : "Simpan"}
-                </Button>
-                <Button type="button" variant="outline" onClick={closeForm}>
-                  Batal
-                </Button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-name">Nama Lengkap</Label>
+                <Input
+                  id="new-name"
+                  type="text"
+                  value={createForm.name}
+                  onChange={(e) =>
+                    setCreateForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  required
+                />
               </div>
-            </form>
-          </CardContent>
-        </Card>
+              <div className="space-y-2">
+                <Label htmlFor="new-role">Role</Label>
+                <Select
+                  value={createForm.role}
+                  onValueChange={(val) =>
+                    setCreateForm((f) => ({ ...f, role: val }))
+                  }
+                >
+                  <Select.Trigger id="new-role">
+                    <Select.Value />
+                  </Select.Trigger>
+                  <Select.Content>
+                    <Select.Item value="satpam">Satpam</Select.Item>
+                    <Select.Item value="admin">Admin</Select.Item>
+                  </Select.Content>
+                </Select>
+              </div>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {formMode === "edit" && editingUser && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Edit Pengguna — {editingUser.username}</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Modal
+          title={`Edit Pengguna — ${editingUser.username}`}
+          onClose={closeForm}
+          footer={
+            <div className="flex gap-3">
+              <Button type="submit" form="user-edit-form" disabled={saving}>
+                {saving ? "Menyimpan..." : "Simpan"}
+              </Button>
+              <Button type="button" variant="outline" onClick={closeForm}>
+                Batal
+              </Button>
+            </div>
+          }
+        >
             {formError && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription>{formError}</AlertDescription>
               </Alert>
             )}
-            <form onSubmit={handleEdit} className="space-y-4">
+            <form id="user-edit-form" onSubmit={handleEdit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-name">Nama Lengkap</Label>
@@ -338,17 +349,8 @@ export default function Users() {
                   <Label>Akun aktif</Label>
                 </div>
               </div>
-              <div className="flex gap-3">
-                <Button type="submit" disabled={saving}>
-                  {saving ? "Menyimpan..." : "Simpan"}
-                </Button>
-                <Button type="button" variant="outline" onClick={closeForm}>
-                  Batal
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+          </form>
+        </Modal>
       )}
 
       <Card>
@@ -357,7 +359,11 @@ export default function Users() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-brutal-muted font-medium">Memuat...</p>
+            <div className="space-y-2 py-2">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
           ) : users.length === 0 ? (
             <p className="text-brutal-muted font-medium">Belum ada pengguna.</p>
           ) : (
@@ -369,7 +375,7 @@ export default function Users() {
                     <TableHead>Nama</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead style={{ width: 180 }}>Aksi</TableHead>
+                    <TableHead className="min-w-[140px] sm:min-w-[180px]">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

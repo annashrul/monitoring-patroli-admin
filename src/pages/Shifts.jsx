@@ -8,9 +8,11 @@ import {
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { TimePicker } from "../components/ui/time-picker";
 import { Label } from "../components/ui/label";
 import { Select } from "../components/ui/select";
 import { Badge } from "../components/ui/badge";
+import { Skeleton } from "../components/ui/skeleton";
 import {
   Table,
   TableHeader,
@@ -21,6 +23,7 @@ import {
 } from "../components/ui/table";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Checkbox } from "../components/ui/checkbox";
+import Modal from "../components/Modal";
 
 const EMPTY_FORM = { name: "", start_time: "", end_time: "", is_active: true };
 
@@ -139,7 +142,7 @@ export default function Shifts() {
           >
             SHIFT
           </Badge>
-          <h1 className="text-2xl font-bold tracking-tight text-saas-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">
             Manajemen Shift
           </h1>
         </div>
@@ -169,82 +172,76 @@ export default function Shifts() {
       )}
 
       {formMode !== null && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>
-              {formMode === "create"
-                ? "Tambah Shift Baru"
-                : `Edit Shift — ${editingShift?.name}`}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {formError && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
+        <Modal
+          title={
+            formMode === "create"
+              ? "Tambah Shift Baru"
+              : `Edit Shift — ${editingShift?.name}`
+          }
+          onClose={closeForm}
+          footer={
+            <div className="flex gap-3">
+              <Button type="submit" form="shift-form" disabled={saving}>
+                {saving ? "Menyimpan..." : "Simpan"}
+              </Button>
+              <Button type="button" variant="outline" onClick={closeForm}>
+                Batal
+              </Button>
+            </div>
+          }
+        >
+          {formError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{formError}</AlertDescription>
+            </Alert>
+          )}
+          <form id="shift-form" onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="shift-name">Nama Shift</Label>
+                <Input
+                  id="shift-name"
+                  type="text"
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  placeholder="Contoh: Shift Pagi"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Jam Mulai</Label>
+                <TimePicker
+                  value={form.start_time}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, start_time: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Jam Selesai</Label>
+                <TimePicker
+                  value={form.end_time}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, end_time: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+            {formMode === "edit" && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={!!form.is_active}
+                  onCheckedChange={(checked) =>
+                    setForm((f) => ({ ...f, is_active: !!checked }))
+                  }
+                />
+                <Label>Shift aktif</Label>
+              </div>
             )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="shift-name">Nama Shift</Label>
-                  <Input
-                    id="shift-name"
-                    type="text"
-                    value={form.name}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, name: e.target.value }))
-                    }
-                    placeholder="Contoh: Shift Pagi"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="shift-start">Jam Mulai</Label>
-                  <Input
-                    id="shift-start"
-                    type="time"
-                    value={form.start_time}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, start_time: e.target.value }))
-                    }
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="shift-end">Jam Selesai</Label>
-                  <Input
-                    id="shift-end"
-                    type="time"
-                    value={form.end_time}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, end_time: e.target.value }))
-                    }
-                    required
-                  />
-                </div>
-              </div>
-              {formMode === "edit" && (
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={!!form.is_active}
-                    onCheckedChange={(checked) =>
-                      setForm((f) => ({ ...f, is_active: !!checked }))
-                    }
-                  />
-                  <Label>Shift aktif</Label>
-                </div>
-              )}
-              <div className="flex gap-3">
-                <Button type="submit" disabled={saving}>
-                  {saving ? "Menyimpan..." : "Simpan"}
-                </Button>
-                <Button type="button" variant="outline" onClick={closeForm}>
-                  Batal
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+          </form>
+        </Modal>
       )}
 
       <Card>
@@ -253,7 +250,11 @@ export default function Shifts() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-brutal-muted font-medium">Memuat...</p>
+            <div className="space-y-2 py-2">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
           ) : shifts.length === 0 ? (
             <p className="text-brutal-muted font-medium">Belum ada shift.</p>
           ) : (
@@ -265,7 +266,7 @@ export default function Shifts() {
                     <TableHead>Jam Mulai</TableHead>
                     <TableHead>Jam Selesai</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead style={{ width: 180 }}>Aksi</TableHead>
+                    <TableHead className="min-w-[140px] sm:min-w-[180px]">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

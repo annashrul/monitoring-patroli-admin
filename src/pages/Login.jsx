@@ -52,11 +52,11 @@ export default function Login() {
     <div className="min-h-screen bg-brutal-bg flex items-center justify-center p-5">
       <div className="w-full max-w-[400px]">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brutal-accent shadow-lg mb-4">
-            <Shield className="w-7 h-7 text-brutal-black" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-saas-primary shadow-lg mb-4">
+            <Shield className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-1">Patroli Satpam</h1>
-          <p className="text-sm text-brutal-muted">Masuk ke dashboard admin</p>
+          <h1 className="text-2xl font-bold text-saas-text mb-1">Patroli Satpam</h1>
+          <p className="text-sm text-saas-text-muted">Masuk ke dashboard admin</p>
         </div>
 
         <Card className="shadow-lg border-brutal-zinc">

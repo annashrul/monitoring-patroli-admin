@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import api, { getErrorMessage } from "../api";
+import { useSite } from "../SiteContext";
 import {
   Card,
   CardContent,
@@ -7,7 +8,7 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
+import { DatePicker } from "../components/ui/date-picker";
 import { Label } from "../components/ui/label";
 import { Select } from "../components/ui/select";
 import { Badge } from "../components/ui/badge";
@@ -20,6 +21,7 @@ import {
   TableCell,
 } from "../components/ui/table";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import { Skeleton } from "../components/ui/skeleton";
 
 const KONDISI_BADGE = {
   aman: { label: "Aman", variant: "success" },
@@ -59,11 +61,10 @@ function LaporanCell({ log }) {
 }
 
 export default function Logs() {
-  const [sites, setSites] = useState([]);
+  const { selectedSiteId, selectedSite } = useSite();
   const [posts, setPosts] = useState([]);
   const [satpams, setSatpams] = useState([]);
 
-  const [siteId, setSiteId] = useState("");
   const [postId, setPostId] = useState("");
   const [userId, setUserId] = useState("");
   const [date, setDate] = useState("");
@@ -75,13 +76,7 @@ export default function Logs() {
   useEffect(() => {
     (async () => {
       try {
-        const [sitesRes, usersRes] = await Promise.all([
-          api.get("/api/sites"),
-          api.get("/api/users"),
-        ]);
-        const siteList = sitesRes.data.data || [];
-        setSites(siteList);
-        if (siteList.length > 0) setSiteId(siteList[0].id);
+        const usersRes = await api.get("/api/users");
         setSatpams(
           (usersRes.data.data || []).filter((u) => u.role === "satpam"),
         );
@@ -92,24 +87,24 @@ export default function Logs() {
   }, []);
 
   useEffect(() => {
-    if (!siteId) return;
+    if (!selectedSiteId) return;
     setPostId("");
     (async () => {
       try {
-        const res = await api.get(`/api/sites/${siteId}/posts`);
+        const res = await api.get(`/api/sites/${selectedSiteId}/posts`);
         setPosts(res.data.data || []);
       } catch (err) {
         setError(getErrorMessage(err, "Gagal memuat daftar pos."));
       }
     })();
-  }, [siteId]);
+  }, [selectedSiteId]);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const params = {};
-      if (siteId) params.site_id = siteId;
+      if (selectedSiteId) params.site_id = selectedSiteId;
       if (postId) params.post_id = postId;
       if (userId) params.user_id = userId;
       if (date) params.date = date;
@@ -120,11 +115,11 @@ export default function Logs() {
     } finally {
       setLoading(false);
     }
-  }, [siteId, postId, userId, date]);
+  }, [selectedSiteId, postId, userId, date]);
 
   useEffect(() => {
-    if (siteId) fetchLogs();
-  }, [siteId, fetchLogs]);
+    if (selectedSiteId) fetchLogs();
+  }, [selectedSiteId, fetchLogs]);
 
   return (
     <div>
@@ -136,7 +131,7 @@ export default function Logs() {
           >
             LOG
           </Badge>
-          <h1 className="text-2xl font-bold tracking-tight text-saas-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">
             Riwayat Scan
           </h1>
         </div>
@@ -150,30 +145,13 @@ export default function Logs() {
 
       <Card className="mb-6">
         <CardContent className="p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div className="space-y-2">
-              <Label htmlFor="filter-date">Tanggal</Label>
-              <Input
-                id="filter-date"
-                type="date"
+              <Label>Tanggal</Label>
+              <DatePicker
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="filter-site">Site</Label>
-              <Select value={siteId} onValueChange={setSiteId}>
-                <Select.Trigger>
-                  <Select.Value />
-                </Select.Trigger>
-                <Select.Content>
-                  {sites.map((s) => (
-                    <Select.Item key={s.id} value={s.id}>
-                      {s.name}
-                    </Select.Item>
-                  ))}
-                </Select.Content>
-              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="filter-post">Pos</Label>
@@ -207,8 +185,8 @@ export default function Logs() {
                 </Select.Content>
               </Select>
             </div>
-            <div className="flex justify-end">
-              <Button onClick={fetchLogs} disabled={loading}>
+            <div className="flex justify-start lg:justify-end">
+              <Button onClick={fetchLogs} disabled={loading} className="w-full sm:w-auto">
                 {loading ? "Memuat..." : "Terapkan Filter"}
               </Button>
             </div>
@@ -222,7 +200,11 @@ export default function Logs() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-brutal-muted font-medium">Memuat...</p>
+            <div className="space-y-2 py-2">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
           ) : logs.length === 0 ? (
             <p className="text-brutal-muted font-medium">
               Tidak ada catatan scan untuk filter ini.

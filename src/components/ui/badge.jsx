@@ -2,11 +2,11 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 
 const badgeVariants = {
-  default: "bg-saas-bg-tertiary text-saas-text-muted border-brutal-black",
-  primary: "bg-saas-primary text-brutal-black border-brutal-black",
+  default: "bg-saas-bg-tertiary text-saas-text border-brutal-black",
+  primary: "bg-saas-primary text-white border-brutal-black",
   destructive: "bg-saas-danger text-white border-brutal-black",
-  success: "bg-saas-success text-brutal-black border-brutal-black",
-  warning: "bg-saas-warning text-brutal-black border-brutal-black",
+  success: "bg-saas-success text-white border-brutal-black",
+  warning: "bg-saas-warning text-white border-brutal-black",
   info: "bg-saas-info text-white border-brutal-black",
   muted: "bg-saas-bg-tertiary text-saas-text-muted border-brutal-black",
   outline: "bg-transparent text-saas-text border-brutal-black",

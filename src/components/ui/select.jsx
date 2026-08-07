@@ -11,11 +11,11 @@ const SelectTrigger = React.forwardRef(
     <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex h-11 w-full rounded-brutal border-2 border-brutal-black bg-saas-bg-secondary px-3 py-2 text-sm text-saas-text font-medium",
+        "flex items-center justify-between h-11 w-full rounded-brutal border-2 border-brutal-black bg-saas-bg-secondary px-3 py-2 text-sm text-saas-text font-medium text-left",
         "shadow-brutal-sm transition-all duration-100",
         "focus:outline-none focus:ring-2 focus:ring-saas-primary focus:shadow-brutal",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        "[&>span]:line-clamp-1",
+        "[&>span]:line-clamp-1 [&>span]:flex-1",
         className,
       )}
       {...props}
@@ -75,7 +75,7 @@ const SelectItem = React.forwardRef(
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-brutal py-1.5 pl-8 pr-2 text-sm text-saas-text font-medium outline-none focus:bg-saas-primary focus:text-brutal-black data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-brutal py-1.5 pl-8 pr-2 text-sm text-saas-text font-medium outline-none focus:bg-saas-primary focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
       {...props}
