@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, FeatureGroup } from 'react-leaflet';
 import { EditControl } from 'react-leaflet-draw';
 import L from 'leaflet';
 import FitBounds from './FitBounds';
 import CurrentLocation from './CurrentLocation';
+import { Skeleton } from './ui/skeleton';
 
 const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTR =
@@ -21,6 +22,7 @@ function layerToPolygon(layer) {
  */
 export default function SitePolygonEditor({ value, onChange, height = "min(420px, 70vh)" }) {
   const fgRef = useRef(null);
+  const [mapReady, setMapReady] = useState(false);
   const center =
     Array.isArray(value) && value.length > 0
       ? [value[0].lat, value[0].lng]
@@ -63,8 +65,9 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
 
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
   return (
-    <div className="rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
-      <MapContainer center={center} zoom={15} style={{ height: '100%', width: '100%' }}>
+    <div className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
+      {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
+      <MapContainer center={center} zoom={15} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
         <TileLayer url={OSM_URL} attribution={OSM_ATTR} />
         {Array.isArray(value) && value.length >= 3 ? (
           <FitBounds polygon={value} />

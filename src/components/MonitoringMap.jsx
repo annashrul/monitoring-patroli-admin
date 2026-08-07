@@ -1,8 +1,9 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import FitBounds from './FitBounds';
 import { Badge } from './ui/badge';
+import { Skeleton } from './ui/skeleton';
 
 const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTR =
@@ -62,10 +63,12 @@ export default function MonitoringMap({ site, posts, height = "min(520px, 70vh)"
       ? [polygon[0].lat, polygon[0].lng]
       : [-6.2, 106.816];
 
+  const [mapReady, setMapReady] = useState(false);
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
   return (
-    <div className="rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
-      <MapContainer center={center} zoom={16} style={{ height: '100%', width: '100%' }}>
+    <div className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
+      {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
+      <MapContainer center={center} zoom={16} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
         <TileLayer url={OSM_URL} attribution={OSM_ATTR} />
         {polygon.length >= 3 && (
           <>

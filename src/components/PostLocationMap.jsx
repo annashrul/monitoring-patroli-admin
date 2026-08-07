@@ -1,7 +1,9 @@
 import { MapContainer, TileLayer, Polygon, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import { useState } from 'react';
 import FitBounds from './FitBounds';
 import CurrentLocation from './CurrentLocation';
+import { Skeleton } from './ui/skeleton';
 
 const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTR =
@@ -59,6 +61,7 @@ export default function PostLocationMap({
   excludePostId,
   height = "min(340px, 70vh)",
 }) {
+  const [mapReady, setMapReady] = useState(false);
   const center =
     Array.isArray(polygon) && polygon.length > 0
       ? [polygon[0].lat, polygon[0].lng]
@@ -66,8 +69,9 @@ export default function PostLocationMap({
 
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
   return (
-    <div className="rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
-      <MapContainer center={center} zoom={16} style={{ height: '100%', width: '100%' }}>
+    <div className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
+      {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
+      <MapContainer center={center} zoom={16} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
         <TileLayer url={OSM_URL} attribution={OSM_ATTR} />
         <ClickHandler onPick={onPick} />
         {Array.isArray(polygon) && polygon.length >= 3 ? (
