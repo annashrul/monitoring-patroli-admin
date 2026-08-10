@@ -58,7 +58,7 @@ function formatTime(iso) {
   }
 }
 
-export default function MonitoringMap({ site, sites, posts, height = "min(520px, 70vh)" }) {
+export default function MonitoringMap({ site, sites, posts, satpamLocations = {}, height = "min(520px, 70vh)" }) {
   const polygon = site?.polygon || [];
   const allSites = site ? [site] : (sites || []);
   const allPolygons = allSites.map((s) => s.polygon).filter((p) => Array.isArray(p) && p.length >= 3);
@@ -122,6 +122,18 @@ export default function MonitoringMap({ site, sites, posts, height = "min(520px,
               </div>
             </Popup>
           </Marker>
+        ))}
+        {Object.values(satpamLocations).map((loc) => (
+          <Marker
+            key={loc.id}
+            position={[loc.latitude, loc.longitude]}
+            icon={L.divIcon({
+              className: 'satpam-marker',
+              html: `<div style="width:16px;height:16px;background:#3B82F6;border:3px solid #fff;border-radius:50%;box-shadow:0 0 6px rgba(59,130,246,0.6);"></div><div style="font-size:10px;font-weight:700;color:#fff;background:rgba(0,0,0,0.7);padding:1px 5px;border-radius:3px;white-space:nowrap;margin-top:2px;">${loc.name}</div>`,
+              iconSize: [16, 16],
+              iconAnchor: [8, 8],
+            })}
+          />
         ))}
       </MapContainer>
       <div className="absolute bottom-4 left-2 z-[999] flex gap-1">

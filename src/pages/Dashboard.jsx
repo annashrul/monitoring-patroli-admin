@@ -38,6 +38,7 @@ export default function Dashboard() {
   const [shiftData, setShiftData] = useState({ shift: null, period: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [satpamLocations, setSatpamLocations] = useState({});
   const selectedSiteRef = useRef("");
 
   const fetchPosts = useCallback(async (siteId) => {
@@ -113,11 +114,23 @@ export default function Dashboard() {
     socket.on("post:scanned", onPostScanned);
     socket.on("posts:changed", onPostsChanged);
     socket.on("shift:changed", onShiftChanged);
+    socket.on("satpam:location", (data) => {
+      setSatpamLocations((prev) => ({ ...prev, [data.id]: data }));
+    });
+    socket.on("satpam:offline", (data) => {
+      setSatpamLocations((prev) => {
+        const next = { ...prev };
+        delete next[data.id];
+        return next;
+      });
+    });
 
     return () => {
       socket.off("post:scanned", onPostScanned);
       socket.off("posts:changed", onPostsChanged);
       socket.off("shift:changed", onShiftChanged);
+      socket.off("satpam:location");
+      socket.off("satpam:offline");
     };
   }, [token, fetchPosts, fetchCurrentShift]);
 
@@ -233,6 +246,7 @@ export default function Dashboard() {
                 <MonitoringMap
                   site={selectedSite}
                   posts={posts}
+                  satpamLocations={satpamLocations}
                   height="min(520px, 70vh)"
                 />
               </CardContent>
@@ -253,6 +267,7 @@ export default function Dashboard() {
                       <MonitoringMap
                         site={s}
                         posts={sitePosts}
+                        satpamLocations={satpamLocations}
                         height={280}
                       />
                     </CardContent>
