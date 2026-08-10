@@ -26,8 +26,8 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { Checkbox } from "../components/ui/checkbox";
 import Modal from "../components/Modal";
 
-const EMPTY_CREATE = { username: "", password: "", name: "", role: "satpam", site_id: "" };
-const EMPTY_EDIT = { name: "", role: "satpam", site_id: "", is_active: true, password: "" };
+const EMPTY_CREATE = { username: "", password: "", name: "", role: "satpam", site_id: "", color: "#3B82F6" };
+const EMPTY_EDIT = { name: "", role: "satpam", site_id: "", color: "#3B82F6", is_active: true, password: "" };
 
 export default function Users() {
   const { user: currentUser } = useAuth();
@@ -80,6 +80,7 @@ export default function Users() {
       name: u.name,
       role: u.role,
       site_id: u.site_id || "",
+      color: u.color || "#3B82F6",
       is_active: u.is_active,
       password: "",
     });
@@ -112,6 +113,7 @@ export default function Users() {
         name: createForm.name.trim(),
         role: createForm.role,
         site_id: createForm.site_id || null,
+        color: createForm.color,
       });
       setNotice("Pengguna berhasil dibuat.");
       closeForm();
@@ -136,6 +138,7 @@ export default function Users() {
         name: editForm.name.trim(),
         role: editForm.role,
         site_id: editForm.site_id || null,
+        color: editForm.color,
         is_active: !!editForm.is_active,
       };
       if (editForm.password) body.password = editForm.password;
@@ -303,6 +306,22 @@ export default function Users() {
                   </Select>
                 )}
               </div>
+              {createForm.role === "satpam" && (
+                <div className="space-y-2">
+                  <Label>Warna Marker</Label>
+                  <div className="flex gap-2 flex-wrap">
+                    {["#3B82F6","#EF4444","#22C55E","#F59E0B","#8B5CF6","#EC4899","#06B6D4","#F97316"].map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setCreateForm((f) => ({ ...f, color: c }))}
+                        className={`w-8 h-8 rounded-full border-2 ${createForm.color === c ? "border-brutal-black scale-110" : "border-transparent"}`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </form>
         </Modal>
       )}
@@ -410,6 +429,22 @@ export default function Users() {
                   )}
                 </div>
               </div>
+              {editForm.role === "satpam" && (
+                <div className="space-y-2">
+                  <Label>Warna Marker</Label>
+                  <div className="flex gap-2 flex-wrap">
+                    {["#3B82F6","#EF4444","#22C55E","#F59E0B","#8B5CF6","#EC4899","#06B6D4","#F97316"].map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setEditForm((f) => ({ ...f, color: c }))}
+                        className={`w-8 h-8 rounded-full border-2 ${editForm.color === c ? "border-brutal-black scale-110" : "border-transparent"}`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={!!editForm.is_active}
