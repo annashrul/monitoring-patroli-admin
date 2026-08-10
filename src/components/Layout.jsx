@@ -100,7 +100,7 @@ export default function Layout() {
         </div>
 
         {/* Site Filter */}
-        {sites.length > 1 && !sidebarCollapsed && (
+        {sites.length > 0 && !sidebarCollapsed && (
           <div className="px-3 py-4 border-b border-saas-border">
             <Select
               value={selectedSiteId}
