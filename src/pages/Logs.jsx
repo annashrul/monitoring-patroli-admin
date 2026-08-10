@@ -22,6 +22,8 @@ import {
 } from "../components/ui/table";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Skeleton } from "../components/ui/skeleton";
+import Modal from "../components/Modal";
+import { Eye } from "lucide-react";
 
 const KONDISI_BADGE = {
   aman: { label: "Aman", variant: "success" },
@@ -76,6 +78,7 @@ export default function Logs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [detailLog, setDetailLog] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -227,6 +230,7 @@ export default function Logs() {
                     <TableHead>Foto</TableHead>
                     <TableHead>Jarak</TableHead>
                     <TableHead>Koordinat</TableHead>
+                    <TableHead className="w-16">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -280,6 +284,15 @@ export default function Logs() {
                           ? `${Number(log.latitude).toFixed(6)}, ${Number(log.longitude).toFixed(6)}`
                           : "-"}
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDetailLog(log)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -288,6 +301,80 @@ export default function Logs() {
           )}
         </CardContent>
       </Card>
+
+      {detailLog && (
+        <Modal
+          title={`Detail Scan — ${detailLog.post?.name || "-"}`}
+          onClose={() => setDetailLog(null)}
+          footer={
+            <Button variant="outline" onClick={() => setDetailLog(null)}>
+              Tutup
+            </Button>
+          }
+        >
+          <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-2">
+              <span className="font-bold text-saas-text-muted">Waktu</span>
+              <span>{new Date(detailLog.scanned_at).toLocaleString("id-ID")}</span>
+              <span className="font-bold text-saas-text-muted">Pos</span>
+              <span>{detailLog.post?.name || "-"}</span>
+              <span className="font-bold text-saas-text-muted">Satpam</span>
+              <span>{detailLog.user?.name || "-"}</span>
+              <span className="font-bold text-saas-text-muted">Status</span>
+              <Badge variant={detailLog.status === "ok" ? "success" : "destructive"}>
+                {detailLog.status === "ok" ? "OK" : "Di Luar Radius"}
+              </Badge>
+              <span className="font-bold text-saas-text-muted">Jarak</span>
+              <span>{detailLog.distance_m != null ? `${detailLog.distance_m} m` : "-"}</span>
+              <span className="font-bold text-saas-text-muted">Koordinat</span>
+              <span className="font-mono text-xs">
+                {detailLog.latitude != null ? `${Number(detailLog.latitude).toFixed(6)}, ${Number(detailLog.longitude).toFixed(6)}` : "-"}
+              </span>
+            </div>
+
+            <hr className="border-saas-border" />
+
+            <div>
+              <div className="font-bold text-saas-text mb-2">Laporan Patroli</div>
+              <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-2">
+                <span className="font-bold text-saas-text-muted">Kondisi</span>
+                <Badge variant={detailLog.kondisi === "aman" ? "success" : detailLog.kondisi === "temuan" ? "warning" : "destructive"}>
+                  {detailLog.kondisi || "Belum diisi"}
+                </Badge>
+                <span className="font-bold text-saas-text-muted">Catatan</span>
+                <span className="break-words">{detailLog.catatan || "-"}</span>
+              </div>
+            </div>
+
+            {Array.isArray(detailLog.checklist) && detailLog.checklist.length > 0 && (
+              <div>
+                <div className="font-bold text-saas-text mb-2">Checklist</div>
+                <div className="space-y-1.5">
+                  {detailLog.checklist.map((c, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 rounded-brutal border border-saas-border bg-saas-bg-tertiary/50">
+                      <Badge variant={c.ok ? "success" : "destructive"} className="shrink-0 text-[10px] px-1.5">
+                        {c.ok ? "OK" : "X"}
+                      </Badge>
+                      <span className="text-sm">{c.item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {detailLog.foto_url && (
+              <div>
+                <div className="font-bold text-saas-text mb-2">Foto Bukti</div>
+                <img
+                  src={detailLog.foto_url}
+                  alt="Foto patroli"
+                  className="max-w-full max-h-60 rounded-brutal border-2 border-brutal-black object-cover"
+                />
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
