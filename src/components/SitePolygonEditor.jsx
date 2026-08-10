@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, FeatureGroup } from 'react-leaflet';
+import { MapContainer, TileLayer, FeatureGroup, useMap } from 'react-leaflet';
 import { EditControl } from 'react-leaflet-draw';
 import L from 'leaflet';
 import FitBounds from './FitBounds';
@@ -17,6 +17,14 @@ function layerToPolygon(layer) {
   return latlngs.map((ll) => ({ lat: ll.lat, lng: ll.lng }));
 }
 
+function MapInvalidator() {
+  const map = useMap();
+  useEffect(() => {
+    setTimeout(() => map.invalidateSize(), 100);
+  }, [map]);
+  return null;
+}
+
 export default function SitePolygonEditor({ value, onChange, height = "min(420px, 70vh)" }) {
   const fgRef = useRef(null);
   const [mapReady, setMapReady] = useState(false);
@@ -27,6 +35,7 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
       : [-6.2, 106.816];
 
   useEffect(() => {
+    if (!mapReady) return;
     const fg = fgRef.current;
     if (!fg) return;
     fg.clearLayers();
@@ -34,7 +43,7 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
       const layer = L.polygon(value.map((p) => [p.lat, p.lng]));
       fg.addLayer(layer);
     }
-  }, []);
+  }, [mapReady, value]);
 
   const handleCreated = (e) => {
     if (e.layerType !== 'polygon') return;
@@ -63,6 +72,7 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
     <div className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
       {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
       <MapContainer center={center} zoom={18} maxZoom={21} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
+        <MapInvalidator />
         <TileLayer
           url={satellite ? GSAT_URL : GMAP_URL}
           attribution={ATTR}

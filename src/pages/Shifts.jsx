@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api, { getErrorMessage } from "../api";
+import { useSite } from "../SiteContext";
 import {
   Card,
   CardContent,
@@ -25,9 +26,16 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { Checkbox } from "../components/ui/checkbox";
 import Modal from "../components/Modal";
 
-const EMPTY_FORM = { name: "", start_time: "", end_time: "", is_active: true };
+const EMPTY_FORM = {
+  name: "",
+  start_time: "",
+  end_time: "",
+  site_id: "",
+  is_active: true,
+};
 
 export default function Shifts() {
+  const { sites, selectedSiteId } = useSite();
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -59,7 +67,7 @@ export default function Shifts() {
   const openCreate = () => {
     setFormMode("create");
     setEditingShift(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, site_id: selectedSiteId || "" });
     setFormError("");
     setNotice("");
   };
@@ -71,6 +79,7 @@ export default function Shifts() {
       name: shift.name,
       start_time: shift.start_time,
       end_time: shift.end_time,
+      site_id: shift.site_id || "",
       is_active: shift.is_active,
     });
     setFormError("");
@@ -98,6 +107,7 @@ export default function Shifts() {
           name: form.name.trim(),
           start_time: form.start_time,
           end_time: form.end_time,
+          site_id: form.site_id || null,
         });
         setNotice("Shift berhasil dibuat.");
       } else {
@@ -105,6 +115,7 @@ export default function Shifts() {
           name: form.name.trim(),
           start_time: form.start_time,
           end_time: form.end_time,
+          site_id: form.site_id || null,
           is_active: !!form.is_active,
         });
         setNotice("Shift berhasil diperbarui.");
@@ -196,20 +207,20 @@ export default function Shifts() {
             </Alert>
           )}
           <form id="shift-form" onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="shift-name">Nama Shift</Label>
-                <Input
-                  id="shift-name"
-                  type="text"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  placeholder="Contoh: Shift Pagi"
-                  required
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="shift-name">Nama Shift</Label>
+              <Input
+                id="shift-name"
+                type="text"
+                value={form.name}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, name: e.target.value }))
+                }
+                placeholder="Contoh: Shift Pagi"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Jam Mulai</Label>
                 <TimePicker
@@ -228,6 +239,38 @@ export default function Shifts() {
                   }
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Site{!selectedSiteId ? " (wajib)" : ""}</Label>
+              {selectedSiteId ? (
+                <Input
+                  value={sites.find((s) => s.id === selectedSiteId)?.name || ""}
+                  readOnly
+                  disabled
+                />
+              ) : (
+                <Select
+                value={form.site_id || "__none"}
+                onValueChange={(val) =>
+                  setForm((f) => ({
+                    ...f,
+                    site_id: val === "__none" ? "" : val,
+                  }))
+                }
+              >
+                <Select.Trigger>
+                  <Select.Value placeholder="Semua site" />
+                </Select.Trigger>
+                <Select.Content>
+                  <Select.Item value="__none">Semua site</Select.Item>
+                  {sites.map((s) => (
+                    <Select.Item key={s.id} value={s.id}>
+                      {s.name}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
+              )}
             </div>
             {formMode === "edit" && (
               <div className="flex items-center gap-2">
@@ -265,8 +308,11 @@ export default function Shifts() {
                     <TableHead>Nama</TableHead>
                     <TableHead>Jam Mulai</TableHead>
                     <TableHead>Jam Selesai</TableHead>
+                    <TableHead>Site</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="min-w-[140px] sm:min-w-[180px]">Aksi</TableHead>
+                    <TableHead className="min-w-[140px] sm:min-w-[180px]">
+                      Aksi
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -278,6 +324,12 @@ export default function Shifts() {
                       <TableCell>{shift.name}</TableCell>
                       <TableCell>{shift.start_time}</TableCell>
                       <TableCell>{shift.end_time}</TableCell>
+                      <TableCell className="text-xs text-saas-text-muted">
+                        {shift.site_id
+                          ? sites.find((s) => s.id === shift.site_id)?.name ||
+                            shift.site_id
+                          : "Semua"}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={shift.is_active ? "success" : "muted"}>
                           {shift.is_active ? "Aktif" : "Nonaktif"}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api, { getErrorMessage } from "../api";
+import { useSite } from "../SiteContext";
 import SitePolygonEditor from "../components/SitePolygonEditor";
 import {
   Card,
@@ -28,7 +29,8 @@ import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, MapPin } from "lucide-reac
 const EMPTY_FORM = { name: "", polygon: [] };
 
 export default function Sites() {
-  const [sites, setSites] = useState([]);
+  const { refetchSites, selectedSiteId } = useSite();
+  const [allSites, setAllSites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -44,7 +46,7 @@ export default function Sites() {
     setError("");
     try {
       const res = await api.get("/api/sites");
-      setSites(res.data.data || []);
+      setAllSites(res.data.data || []);
     } catch (err) {
       setError(getErrorMessage(err, "Gagal memuat daftar site."));
     } finally {
@@ -55,6 +57,10 @@ export default function Sites() {
   useEffect(() => {
     fetchSites();
   }, []);
+
+  const sites = selectedSiteId
+    ? allSites.filter((s) => s.id === selectedSiteId)
+    : allSites;
 
   const openCreate = () => {
     setFormMode("create");
@@ -109,6 +115,7 @@ export default function Sites() {
       }
       closeForm();
       fetchSites();
+      refetchSites();
     } catch (err) {
       setFormError(getErrorMessage(err, "Gagal menyimpan site."));
     } finally {
@@ -125,6 +132,7 @@ export default function Sites() {
         `Site "${site.name}" ${site.is_active ? "dinonaktifkan" : "diaktifkan"}.`,
       );
       fetchSites();
+      refetchSites();
     } catch (err) {
       setError(getErrorMessage(err, "Gagal mengubah status site."));
     }
@@ -145,6 +153,7 @@ export default function Sites() {
       setNotice(`Site "${site.name}" berhasil dihapus.`);
       if (editingId === site.id) closeForm();
       fetchSites();
+      refetchSites();
     } catch (err) {
       setError(getErrorMessage(err, "Gagal menghapus site."));
     }

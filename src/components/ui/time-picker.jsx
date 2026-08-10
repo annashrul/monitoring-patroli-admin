@@ -16,10 +16,16 @@ function TimePicker({ value, onChange, className }) {
   };
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <Clock className="w-4 h-4 text-saas-text-muted shrink-0" />
+    <div className={cn(
+      "flex items-center h-11 rounded-brutal border-2 border-brutal-black bg-saas-bg-secondary shadow-brutal-sm overflow-hidden",
+      className,
+    )}>
+      <div className="flex items-center gap-1.5 px-3 border-r-2 border-brutal-black h-full bg-saas-bg-tertiary/50">
+        <Clock className="w-4 h-4 text-saas-text-muted" />
+        <span className="text-xs font-bold text-saas-text-muted uppercase tracking-wider">Jam</span>
+      </div>
       <Select value={hours || undefined} onValueChange={(v) => handleChange("hour", v)}>
-        <Select.Trigger className="w-[70px] h-11 text-sm">
+        <Select.Trigger className="w-[60px] h-full border-0 rounded-none shadow-none bg-transparent text-sm font-mono justify-center focus:ring-0 focus:shadow-none">
           <Select.Value placeholder="--" />
         </Select.Trigger>
         <Select.Content>
@@ -28,9 +34,9 @@ function TimePicker({ value, onChange, className }) {
           ))}
         </Select.Content>
       </Select>
-      <span className="text-saas-text font-bold">:</span>
+      <span className="text-saas-text font-bold text-sm">:</span>
       <Select value={minutes || undefined} onValueChange={(v) => handleChange("minute", v)}>
-        <Select.Trigger className="w-[70px] h-11 text-sm">
+        <Select.Trigger className="w-[60px] h-full border-0 rounded-none shadow-none bg-transparent text-sm font-mono justify-center focus:ring-0 focus:shadow-none">
           <Select.Value placeholder="--" />
         </Select.Trigger>
         <Select.Content>

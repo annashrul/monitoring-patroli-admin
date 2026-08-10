@@ -41,9 +41,10 @@ export default function Dashboard() {
   const selectedSiteRef = useRef("");
 
   const fetchPosts = useCallback(async (siteId) => {
-    if (!siteId) return;
     try {
-      const res = await api.get(`/api/sites/${siteId}/posts`);
+      const res = siteId
+        ? await api.get(`/api/sites/${siteId}/posts`)
+        : await api.get("/api/posts?all=true");
       setPosts(res.data.data || []);
     } catch (err) {
       setError(getErrorMessage(err, "Gagal memuat data pos."));
@@ -64,7 +65,6 @@ export default function Dashboard() {
   }, [sitesLoading]);
 
   useEffect(() => {
-    if (!selectedSiteId) return;
     selectedSiteRef.current = selectedSiteId;
     setPosts([]);
     fetchPosts(selectedSiteId);
@@ -226,16 +226,43 @@ export default function Dashboard() {
             ))}
           </div>
 
-          <Card className="mb-6 overflow-hidden">
-            <CardContent className="p-0">
-              <MonitoringMap
-                site={selectedSite}
-                posts={posts}
-                height="min(520px, 70vh)"
-              />
-            </CardContent>
-          </Card>
+          {/* Map — grid 3 kolom jika "Semua Site" */}
+          {selectedSite ? (
+            <Card className="mb-6 overflow-hidden">
+              <CardContent className="p-0">
+                <MonitoringMap
+                  site={selectedSite}
+                  posts={posts}
+                  height="min(520px, 70vh)"
+                />
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              {sites.map((s) => {
+                const sitePosts = posts.filter((p) => p.site_id === s.id);
+                return (
+                  <Card key={s.id} className="overflow-hidden">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">{s.name}</CardTitle>
+                      <CardDescription>
+                        {sitePosts.length} pos • {sitePosts.filter((p) => p.status === 'scanned').length} scanned
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <MonitoringMap
+                        site={s}
+                        posts={sitePosts}
+                        height={280}
+                      />
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
 
+          {selectedSite && (
           <Card>
             <CardHeader>
               <CardTitle>
@@ -306,6 +333,7 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
+          )}
         </>
       )}
     </div>

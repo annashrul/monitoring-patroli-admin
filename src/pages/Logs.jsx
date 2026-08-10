@@ -63,7 +63,11 @@ function LaporanCell({ log }) {
 export default function Logs() {
   const { selectedSiteId, selectedSite } = useSite();
   const [posts, setPosts] = useState([]);
-  const [satpams, setSatpams] = useState([]);
+  const [allSatpams, setAllSatpams] = useState([]);
+
+  const satpams = selectedSiteId
+    ? allSatpams.filter((u) => u.site_id === selectedSiteId || !u.site_id)
+    : allSatpams;
 
   const [postId, setPostId] = useState("");
   const [userId, setUserId] = useState("");
@@ -77,7 +81,7 @@ export default function Logs() {
     (async () => {
       try {
         const usersRes = await api.get("/api/users");
-        setSatpams(
+        setAllSatpams(
           (usersRes.data.data || []).filter((u) => u.role === "satpam"),
         );
       } catch (err) {
@@ -118,7 +122,7 @@ export default function Logs() {
   }, [selectedSiteId, postId, userId, date]);
 
   useEffect(() => {
-    if (selectedSiteId) fetchLogs();
+    fetchLogs();
   }, [selectedSiteId, fetchLogs]);
 
   return (

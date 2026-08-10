@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api, { getErrorMessage } from "../api";
 import { useAuth } from "../AuthContext";
+import { useSite } from "../SiteContext";
 import {
   Card,
   CardContent,
@@ -25,12 +26,13 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { Checkbox } from "../components/ui/checkbox";
 import Modal from "../components/Modal";
 
-const EMPTY_CREATE = { username: "", password: "", name: "", role: "satpam" };
-const EMPTY_EDIT = { name: "", role: "satpam", is_active: true, password: "" };
+const EMPTY_CREATE = { username: "", password: "", name: "", role: "satpam", site_id: "" };
+const EMPTY_EDIT = { name: "", role: "satpam", site_id: "", is_active: true, password: "" };
 
 export default function Users() {
   const { user: currentUser } = useAuth();
-  const [users, setUsers] = useState([]);
+  const { sites, selectedSiteId } = useSite();
+  const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -47,7 +49,7 @@ export default function Users() {
     setError("");
     try {
       const res = await api.get("/api/users");
-      setUsers(res.data.data || []);
+      setAllUsers(res.data.data || []);
     } catch (err) {
       setError(getErrorMessage(err, "Gagal memuat daftar pengguna."));
     } finally {
@@ -59,10 +61,14 @@ export default function Users() {
     fetchUsers();
   }, []);
 
+  const users = (selectedSiteId
+    ? allUsers.filter((u) => u.site_id === selectedSiteId || u.role === 'owner')
+    : allUsers).filter((u) => u.role !== 'owner');
+
   const openCreate = () => {
     setFormMode("create");
     setEditingUser(null);
-    setCreateForm(EMPTY_CREATE);
+    setCreateForm({ ...EMPTY_CREATE, site_id: selectedSiteId || "" });
     setFormError("");
     setNotice("");
   };
@@ -73,6 +79,7 @@ export default function Users() {
     setEditForm({
       name: u.name,
       role: u.role,
+      site_id: u.site_id || "",
       is_active: u.is_active,
       password: "",
     });
@@ -104,6 +111,7 @@ export default function Users() {
         password: createForm.password,
         name: createForm.name.trim(),
         role: createForm.role,
+        site_id: createForm.site_id || null,
       });
       setNotice("Pengguna berhasil dibuat.");
       closeForm();
@@ -127,6 +135,7 @@ export default function Users() {
       const body = {
         name: editForm.name.trim(),
         role: editForm.role,
+        site_id: editForm.site_id || null,
         is_active: !!editForm.is_active,
       };
       if (editForm.password) body.password = editForm.password;
@@ -187,6 +196,7 @@ export default function Users() {
 
       {formMode === "create" && (
         <Modal
+          wide
           title="Tambah Pengguna Baru"
           onClose={closeForm}
           footer={
@@ -205,71 +215,101 @@ export default function Users() {
               <AlertDescription>{formError}</AlertDescription>
             </Alert>
           )}
-          <form id="user-create-form" onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-username">Username</Label>
-                <Input
-                  id="new-username"
-                  type="text"
-                  value={createForm.username}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, username: e.target.value }))
-                  }
-                  required
-                />
+            <form id="user-create-form" onSubmit={handleCreate} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-username">Username</Label>
+                  <Input
+                    id="new-username"
+                    type="text"
+                    value={createForm.username}
+                    onChange={(e) =>
+                      setCreateForm((f) => ({ ...f, username: e.target.value }))
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-name">Nama Lengkap</Label>
+                  <Input
+                    id="new-name"
+                    type="text"
+                    value={createForm.name}
+                    onChange={(e) =>
+                      setCreateForm((f) => ({ ...f, name: e.target.value }))
+                    }
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">Password</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={createForm.password}
+                    onChange={(e) =>
+                      setCreateForm((f) => ({ ...f, password: e.target.value }))
+                    }
+                    autoComplete="new-password"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-role">Role</Label>
+                  <Select
+                    value={createForm.role}
+                    onValueChange={(val) =>
+                      setCreateForm((f) => ({ ...f, role: val }))
+                    }
+                  >
+                    <Select.Trigger id="new-role">
+                      <Select.Value />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="satpam">Satpam</Select.Item>
+                      <Select.Item value="admin">Admin</Select.Item>
+                      <Select.Item value="owner">Owner</Select.Item>
+                    </Select.Content>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="new-password">Password</Label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  value={createForm.password}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, password: e.target.value }))
-                  }
-                  autoComplete="new-password"
-                  required
-                />
+                <Label>Site{!selectedSiteId && " (wajib)"}</Label>
+                {selectedSiteId ? (
+                  <Input
+                    value={sites.find((s) => s.id === selectedSiteId)?.name || ""}
+                    readOnly
+                    disabled
+                  />
+                ) : (
+                  <Select
+                    value={createForm.site_id || "__none"}
+                    onValueChange={(val) =>
+                      setCreateForm((f) => ({ ...f, site_id: val === "__none" ? "" : val }))
+                    }
+                  >
+                    <Select.Trigger>
+                      <Select.Value placeholder="Pilih Site" />
+                    </Select.Trigger>
+                    <Select.Content>
+                      {sites.map((s) => (
+                        <Select.Item key={s.id} value={s.id}>
+                          {s.name}
+                        </Select.Item>
+                      ))}
+                    </Select.Content>
+                  </Select>
+                )}
               </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-name">Nama Lengkap</Label>
-                <Input
-                  id="new-name"
-                  type="text"
-                  value={createForm.name}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-role">Role</Label>
-                <Select
-                  value={createForm.role}
-                  onValueChange={(val) =>
-                    setCreateForm((f) => ({ ...f, role: val }))
-                  }
-                >
-                  <Select.Trigger id="new-role">
-                    <Select.Value />
-                  </Select.Trigger>
-                  <Select.Content>
-                    <Select.Item value="satpam">Satpam</Select.Item>
-                    <Select.Item value="admin">Admin</Select.Item>
-                  </Select.Content>
-                </Select>
-              </div>
-            </div>
-          </form>
+            </form>
         </Modal>
       )}
 
       {formMode === "edit" && editingUser && (
         <Modal
+          wide
           title={`Edit Pengguna — ${editingUser.username}`}
           onClose={closeForm}
           footer={
@@ -316,6 +356,7 @@ export default function Users() {
                     <Select.Content>
                       <Select.Item value="satpam">Satpam</Select.Item>
                       <Select.Item value="admin">Admin</Select.Item>
+                      <Select.Item value="owner">Owner</Select.Item>
                     </Select.Content>
                   </Select>
                 </div>
@@ -324,7 +365,7 @@ export default function Users() {
                 <div className="space-y-2">
                   <Label htmlFor="edit-password">
                     Reset Password{" "}
-                    <span className="text-xs font-semibold text-brutal-muted">
+                    <span className="text-xs font-medium text-saas-text-muted">
                       (kosongkan jika tidak diubah)
                     </span>
                   </Label>
@@ -339,17 +380,46 @@ export default function Users() {
                     placeholder="Password baru (opsional)"
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={!!editForm.is_active}
-                    onCheckedChange={(checked) =>
-                      setEditForm((f) => ({ ...f, is_active: !!checked }))
+                <div className="space-y-2">
+                  <Label>Site{!selectedSiteId && " (wajib)"}</Label>
+                  {selectedSiteId ? (
+                    <Input
+                      value={sites.find((s) => s.id === selectedSiteId)?.name || ""}
+                      readOnly
+                      disabled
+                    />
+                  ) : (
+                  <Select
+                    value={editForm.site_id || "__none"}
+                    onValueChange={(val) =>
+                      setEditForm((f) => ({ ...f, site_id: val === "__none" ? "" : val }))
                     }
-                  />
-                  <Label>Akun aktif</Label>
+                  >
+                    <Select.Trigger>
+                      <Select.Value placeholder="Semua site" />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="__none">Semua site</Select.Item>
+                      {sites.map((s) => (
+                        <Select.Item key={s.id} value={s.id}>
+                          {s.name}
+                        </Select.Item>
+                      ))}
+                    </Select.Content>
+                  </Select>
+                  )}
                 </div>
               </div>
-          </form>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={!!editForm.is_active}
+                  onCheckedChange={(checked) =>
+                    setEditForm((f) => ({ ...f, is_active: !!checked }))
+                  }
+                />
+                <Label>Akun aktif</Label>
+              </div>
+            </form>
         </Modal>
       )}
 
@@ -374,6 +444,7 @@ export default function Users() {
                     <TableHead>Username</TableHead>
                     <TableHead>Nama</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Site</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="min-w-[140px] sm:min-w-[180px]">Aksi</TableHead>
                   </TableRow>
@@ -394,9 +465,12 @@ export default function Users() {
                       </TableCell>
                       <TableCell>{u.name}</TableCell>
                       <TableCell>
-                        <Badge variant={u.role === "admin" ? "info" : "muted"}>
+                        <Badge variant={u.role === "admin" ? "info" : u.role === "owner" ? "default" : "muted"}>
                           {u.role}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-saas-text-muted">
+                        {u.site_id ? (sites.find((s) => s.id === u.site_id)?.name || u.site_id) : "-"}
                       </TableCell>
                       <TableCell>
                         <Badge variant={u.is_active ? "success" : "muted"}>
@@ -412,6 +486,23 @@ export default function Users() {
                           >
                             Edit
                           </Button>
+                          {u.role === "satpam" && u.device_token && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  await api.post(`/api/users/${u.id}/release`);
+                                  setNotice(`Sesi ${u.name} dilepas.`);
+                                  fetchUsers();
+                                } catch (err) {
+                                  setError(getErrorMessage(err, "Gagal melepas sesi."));
+                                }
+                              }}
+                            >
+                              Lepas
+                            </Button>
+                          )}
                           <Button
                             variant="destructive"
                             size="sm"

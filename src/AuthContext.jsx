@@ -57,7 +57,7 @@ export function ProtectedRoute({ children }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user && user.role !== 'admin') {
+  if (user && user.role !== 'admin' && user.role !== 'owner') {
     return (
       <div className="min-h-screen flex items-center justify-center p-5">
         <Card className="max-w-[420px] text-center border-[3px] border-brutal-zinc shadow-brutal">
@@ -67,7 +67,7 @@ export function ProtectedRoute({ children }) {
           <CardContent>
             <Alert variant="destructive" className="mb-4">
               <AlertDescription>
-                Akun <strong>{user.username}</strong> memiliki role <strong>{user.role}</strong>. Web admin hanya untuk role <strong>admin</strong>.
+                Akun <strong>{user.username}</strong> memiliki role <strong>{user.role}</strong>. Web admin hanya untuk role <strong>admin/owner</strong>.
               </AlertDescription>
             </Alert>
             <LogoutButton />

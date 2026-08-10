@@ -68,10 +68,11 @@ export default function Posts() {
   const [qrPost, setQrPost] = useState(null);
 
   const fetchPosts = useCallback(async (siteId) => {
-    if (!siteId) return;
     setLoadingPosts(true);
     try {
-      const res = await api.get(`/api/sites/${siteId}/posts`);
+      const res = siteId
+        ? await api.get(`/api/sites/${siteId}/posts`)
+        : await api.get("/api/posts?all=true");
       setPosts(res.data.data || []);
     } catch (err) {
       setError(getErrorMessage(err, "Gagal memuat daftar pos."));
@@ -81,11 +82,9 @@ export default function Posts() {
   }, []);
 
   useEffect(() => {
-    if (selectedSiteId) {
-      setPosts([]);
-      fetchPosts(selectedSiteId);
-      setFormMode(null);
-    }
+    setPosts([]);
+    fetchPosts(selectedSiteId);
+    setFormMode(null);
   }, [selectedSiteId, fetchPosts]);
 
   const openCreate = () => {
@@ -319,7 +318,7 @@ export default function Posts() {
           </h1>
         </div>
         <div className="flex items-center gap-3">
-          {formMode === null && (
+          {formMode === null && selectedSiteId && (
             <Button onClick={openCreate}>
               <Plus className="w-4 h-4 mr-2" />
               Tambah Pos
@@ -488,32 +487,55 @@ export default function Posts() {
         </Modal>
       )}
 
-      <Card className="mb-6 overflow-hidden">
-        <CardHeader>
-          <CardTitle>
-            Peta {selectedSite ? `— ${selectedSite.name}` : ""}
-          </CardTitle>
-          <CardDescription>
-            Visualisasi polygon site dan posisi titik pos
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <PostLocationMap
-            polygon={selectedSite?.polygon || []}
-            posts={posts}
-            picked={null}
-            onPick={null}
-            height={300}
-          />
-        </CardContent>
-      </Card>
+      {/* Map — grid per site jika "Semua Site" */}
+      {selectedSite ? (
+        <Card className="mb-6 overflow-hidden">
+          <CardHeader>
+            <CardTitle>Peta — {selectedSite.name}</CardTitle>
+            <CardDescription>Visualisasi polygon site dan posisi titik pos</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <PostLocationMap
+              polygon={selectedSite.polygon || []}
+              posts={posts}
+              picked={null}
+              onPick={null}
+              height={300}
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {sites.map((s) => {
+            const sitePosts = posts.filter((p) => p.site_id === s.id);
+            return (
+              <Card key={s.id} className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">{s.name}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <PostLocationMap
+                    polygon={s.polygon || []}
+                    posts={sitePosts}
+                    picked={null}
+                    onPick={null}
+                    height={220}
+                  />
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <Card>
         <CardHeader>
           <CardTitle>
-            Daftar Pos {selectedSite ? `— ${selectedSite.name}` : ""}
+            Daftar Pos {selectedSite ? `— ${selectedSite.name}` : "— Semua Site"}
           </CardTitle>
-          <CardDescription>Kelola pos patroli pada site ini</CardDescription>
+          <CardDescription>
+            {selectedSite ? "Kelola pos patroli pada site ini" : "Daftar semua pos dari semua site"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loadingPosts ? (
@@ -534,9 +556,10 @@ export default function Posts() {
                     <TableHead>Nama</TableHead>
                     <TableHead>Koordinat</TableHead>
                     <TableHead>Radius</TableHead>
+                    {!selectedSite && <TableHead>Site</TableHead>}
                     <TableHead>Status</TableHead>
                     <TableHead>QR</TableHead>
-                    <TableHead className="min-w-[140px] sm:min-w-[180px]">Aksi</TableHead>
+                    {selectedSite && <TableHead className="min-w-[140px] sm:min-w-[180px]">Aksi</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -551,6 +574,11 @@ export default function Posts() {
                         {Number(post.longitude).toFixed(6)}
                       </TableCell>
                       <TableCell>{post.radius_m} m</TableCell>
+                      {!selectedSite && (
+                        <TableCell className="text-xs">
+                          {sites.find((s) => s.id === post.site_id)?.name || post.site_id}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Badge variant={post.is_active ? "success" : "muted"}>
                           {post.is_active ? "Aktif" : "Nonaktif"}
@@ -566,6 +594,7 @@ export default function Posts() {
                           Lihat QR
                         </Button>
                       </TableCell>
+                      {selectedSite && (
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
@@ -586,6 +615,7 @@ export default function Posts() {
                           </Button>
                         </div>
                       </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

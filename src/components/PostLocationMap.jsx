@@ -1,6 +1,6 @@
-import { MapContainer, TileLayer, Polygon, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Polygon, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FitBounds from './FitBounds';
 import CurrentLocation from './CurrentLocation';
 import { Skeleton } from './ui/skeleton';
@@ -55,6 +55,14 @@ function ClickHandler({ onPick }) {
   return null;
 }
 
+function MapInvalidator() {
+  const map = useMap();
+  useEffect(() => {
+    setTimeout(() => map.invalidateSize(), 100);
+  }, [map]);
+  return null;
+}
+
 export default function PostLocationMap({
   polygon,
   posts = [],
@@ -75,6 +83,7 @@ export default function PostLocationMap({
     <div className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
       {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
       <MapContainer center={center} zoom={18} maxZoom={21} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
+        <MapInvalidator />
         <TileLayer
           url={satellite ? GSAT_URL : GMAP_URL}
           attribution={ATTR}

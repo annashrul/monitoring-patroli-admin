@@ -100,16 +100,19 @@ export default function Layout() {
         </div>
 
         {/* Site Filter */}
-        {sites.length > 0 && !sidebarCollapsed && (
+        {!sidebarCollapsed && sites.length > 0 && (
           <div className="px-3 py-4 border-b border-saas-border">
             <Select
-              value={selectedSiteId}
-              onValueChange={(value) => setSelectedSiteId(value)}
+              value={selectedSiteId || (user?.role === 'owner' ? '__all__' : selectedSiteId)}
+              onValueChange={(value) => setSelectedSiteId(value === '__all__' ? '' : value)}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Pilih Area" />
               </SelectTrigger>
               <SelectContent>
+                {user?.role === 'owner' && (
+                  <SelectItem value="__all__">Semua Site</SelectItem>
+                )}
                 {sites.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
                     {s.name}
@@ -166,16 +169,19 @@ export default function Layout() {
           </div>
 
           {/* Site Filter - Mobile */}
-          {sites.length > 1 && (
+          {sites.length > 0 && (
             <div className="px-3 py-4 border-b border-saas-border">
               <Select
-                value={selectedSiteId}
-                onValueChange={(value) => setSelectedSiteId(value)}
+                value={selectedSiteId || (user?.role === 'owner' ? '__all__' : selectedSiteId)}
+                onValueChange={(value) => setSelectedSiteId(value === '__all__' ? '' : value)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Pilih Area" />
                 </SelectTrigger>
                 <SelectContent>
+                  {user?.role === 'owner' && (
+                    <SelectItem value="__all__">Semua Site</SelectItem>
+                  )}
                   {sites.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
@@ -234,7 +240,7 @@ export default function Layout() {
       <main
         className={`flex-1 ${mainMarginLeft} min-h-screen overflow-x-hidden`}
       >
-        <header className="sticky top-0 z-40 h-16 bg-saas-card/80 backdrop-blur-sm border-b border-saas-border flex items-center justify-between px-4 lg:px-6">
+        <header className="sticky top-0 z-40 h-16 bg-saas-bg border-b-2 border-brutal-black flex items-center justify-between px-4 lg:px-6 shadow-brutal-sm">
           <div className="flex items-center gap-4 lg:hidden">
             <Button
               variant="ghost"

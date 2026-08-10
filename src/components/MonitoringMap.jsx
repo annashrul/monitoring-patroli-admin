@@ -58,13 +58,17 @@ function formatTime(iso) {
   }
 }
 
-export default function MonitoringMap({ site, posts, height = "min(520px, 70vh)" }) {
+export default function MonitoringMap({ site, sites, posts, height = "min(520px, 70vh)" }) {
   const polygon = site?.polygon || [];
+  const allSites = site ? [site] : (sites || []);
+  const allPolygons = allSites.map((s) => s.polygon).filter((p) => Array.isArray(p) && p.length >= 3);
   const [mapReady, setMapReady] = useState(false);
   const [satellite, setSatellite] = useState(false);
   const center =
     polygon.length > 0
       ? [polygon[0].lat, polygon[0].lng]
+      : allPolygons.length > 0
+      ? [allPolygons[0][0].lat, allPolygons[0][0].lng]
       : [-6.2, 106.816];
 
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
@@ -79,14 +83,16 @@ export default function MonitoringMap({ site, posts, height = "min(520px, 70vh)"
           maxNativeZoom={20}
           subdomains={['0', '1', '2', '3']}
         />
-        {polygon.length >= 3 && (
-          <>
+        {allPolygons.map((poly, i) => (
+          <Fragment key={i}>
             <Polygon
-              positions={polygon.map((p) => [p.lat, p.lng])}
+              positions={poly.map((p) => [p.lat, p.lng])}
               pathOptions={{ color: '#1e3a5f', weight: 2, fillOpacity: 0.06 }}
             />
-            <FitBounds polygon={polygon} />
-          </>
+          </Fragment>
+        ))}
+        {allPolygons.length > 0 && (
+          <FitBounds polygon={allPolygons.flat()} />
         )}
         {posts.map((post) => (
           <Marker

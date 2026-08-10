@@ -24,7 +24,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (isAuthenticated && user?.role === "admin") {
+  if (isAuthenticated && (user?.role === "admin" || user?.role === "owner")) {
     return <Navigate to="/" replace />;
   }
 
@@ -34,7 +34,7 @@ export default function Login() {
     setLoading(true);
     try {
       const loggedUser = await login(username.trim(), password);
-      if (loggedUser.role !== "admin") {
+      if (loggedUser.role !== "admin" && loggedUser.role !== "owner") {
         logout();
         setError("Akun ini bukan admin. Web admin hanya untuk role admin.");
         return;
