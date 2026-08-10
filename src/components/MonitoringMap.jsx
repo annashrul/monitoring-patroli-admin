@@ -129,9 +129,9 @@ export default function MonitoringMap({ site, sites, posts, satpamLocations = {}
             position={[loc.latitude, loc.longitude]}
             icon={L.divIcon({
               className: 'satpam-marker',
-              html: `<div style="width:16px;height:16px;background:#3B82F6;border:3px solid #fff;border-radius:50%;box-shadow:0 0 6px rgba(59,130,246,0.6);"></div><div style="font-size:10px;font-weight:700;color:#fff;background:rgba(0,0,0,0.7);padding:1px 5px;border-radius:3px;white-space:nowrap;margin-top:2px;">${loc.name}</div>`,
-              iconSize: [16, 16],
-              iconAnchor: [8, 8],
+              html: `<div style="display:flex;flex-direction:column;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#3B82F6" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg><div style="font-size:10px;font-weight:700;color:#fff;background:rgba(0,0,0,0.7);padding:1px 5px;border-radius:3px;white-space:nowrap;margin-top:-4px;">${loc.name}</div></div>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
             })}
           />
         ))}
