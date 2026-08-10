@@ -22,15 +22,18 @@ export function SiteProvider({ children }) {
       const res = await api.get("/api/sites");
       const activeSites = (res.data.data || []).filter((s) => s.is_active);
       setSites(activeSites);
-      if (activeSites.length > 0 && !selectedSiteId) {
-        setSelectedSiteId(activeSites[0].id);
+      if (activeSites.length > 0) {
+        setSelectedSiteId((prev) => {
+          const exists = activeSites.find((s) => s.id === prev);
+          return exists ? prev : activeSites[0].id;
+        });
       }
     } catch (err) {
       setError(getErrorMessage(err, "Gagal memuat daftar site."));
     } finally {
       setLoading(false);
     }
-  }, [selectedSiteId]);
+  }, []);
 
   useEffect(() => {
     fetchSites();
