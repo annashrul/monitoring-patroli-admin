@@ -12,6 +12,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Select } from "../components/ui/select";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
 import {
@@ -143,20 +144,45 @@ export default function Sites() {
       !window.confirm(
         `Hapus site "${site.name}"? Tindakan ini tidak dapat dibatalkan.`,
       )
-    ) {
-      return;
-    }
-    setError("");
-    setNotice("");
+    ) return;
+    setError(""); setNotice("");
     try {
       await api.delete(`/api/sites/${site.id}`);
       setNotice(`Site "${site.name}" berhasil dihapus.`);
       if (editingId === site.id) closeForm();
-      fetchSites();
-      refetchSites();
-    } catch (err) {
-      setError(getErrorMessage(err, "Gagal menghapus site."));
-    }
+      fetchSites(); refetchSites();
+    } catch (err) { setError(getErrorMessage(err, "Gagal menghapus site.")); }
+  };
+
+  const fetchChecklist = async (siteId) => {
+    try {
+      const res = await api.get(`/api/checklist-items?site_id=${siteId}`);
+      setChecklistItems(res.data.data || []);
+    } catch {}
+  };
+
+  const addChecklistItem = async () => {
+    if (!newItem.trim() || !checklistSite) return;
+    try {
+      await api.post("/api/checklist-items", { site_id: checklistSite.id, item: newItem.trim() });
+      setNewItem("");
+      fetchChecklist(checklistSite.id);
+    } catch (err) { setError(getErrorMessage(err, "Gagal menambah item.")); }
+  };
+
+  const toggleChecklistItem = async (item) => {
+    try {
+      await api.put(`/api/checklist-items/${item.id}`, { is_active: !item.is_active });
+      fetchChecklist(checklistSite.id);
+    } catch (err) { setError(getErrorMessage(err, "Gagal update item.")); }
+  };
+
+  const deleteChecklistItem = async (item) => {
+    if (!window.confirm(`Hapus "${item.item}"?`)) return;
+    try {
+      await api.delete(`/api/checklist-items/${item.id}`);
+      fetchChecklist(checklistSite.id);
+    } catch (err) { setError(getErrorMessage(err, "Gagal hapus item.")); }
   };
 
   return (

@@ -36,6 +36,7 @@ import {
   Printer,
   Eye,
   Loader2,
+  ClipboardList,
 } from "lucide-react";
 
 const EMPTY_FORM = {
@@ -68,6 +69,11 @@ export default function Posts() {
 
   const [qrPost, setQrPost] = useState(null);
   const [statusLabels, setStatusLabels] = useState(null);
+  const [checklistPost, setChecklistPost] = useState(null);
+  const [checklistItems, setChecklistItems] = useState([]);
+  const [newItem, setNewItem] = useState("");
+  const [editingItem, setEditingItem] = useState(null);
+  const [editItemText, setEditItemText] = useState("");
 
   const fetchPosts = useCallback(async (siteId) => {
     setLoadingPosts(true);
@@ -275,6 +281,47 @@ export default function Posts() {
     printWindow.focus();
     printWindow.print();
     printWindow.close();
+  };
+
+  const fetchChecklist = async (postId) => {
+    try {
+      const res = await api.get(`/api/checklist-items?post_id=${postId}`);
+      setChecklistItems(res.data.data || []);
+    } catch {}
+  };
+
+  const addChecklistItem = async () => {
+    if (!newItem.trim() || !checklistPost) return;
+    try {
+      await api.post("/api/checklist-items", { post_id: checklistPost.id, item: newItem.trim() });
+      setNewItem("");
+      fetchChecklist(checklistPost.id);
+    } catch (err) { setError(getErrorMessage(err, "Gagal menambah item.")); }
+  };
+
+  const toggleChecklistItem = async (item) => {
+    try {
+      await api.put(`/api/checklist-items/${item.id}`, { is_active: !item.is_active });
+      fetchChecklist(checklistPost.id);
+    } catch (err) { setError(getErrorMessage(err, "Gagal update item.")); }
+  };
+
+  const deleteChecklistItem = async (item) => {
+    if (!window.confirm(`Hapus "${item.item}"?`)) return;
+    try {
+      await api.delete(`/api/checklist-items/${item.id}`);
+      fetchChecklist(checklistPost.id);
+    } catch (err) { setError(getErrorMessage(err, "Gagal hapus item.")); }
+  };
+
+  const updateChecklistItem = async () => {
+    if (!editItemText.trim() || !editingItem) return;
+    try {
+      await api.put(`/api/checklist-items/${editingItem.id}`, { item: editItemText.trim() });
+      setEditingItem(null);
+      setEditItemText("");
+      fetchChecklist(checklistPost.id);
+    } catch (err) { setError(getErrorMessage(err, "Gagal update item.")); }
   };
 
   if (loadingSites) {
@@ -581,6 +628,7 @@ export default function Posts() {
                     <TableHead>Nama</TableHead>
                     <TableHead>Koordinat</TableHead>
                     <TableHead>Radius</TableHead>
+                    <TableHead>Interval</TableHead>
                     {!selectedSite && <TableHead>Site</TableHead>}
                     <TableHead>Status</TableHead>
                     <TableHead>QR</TableHead>
@@ -599,6 +647,7 @@ export default function Posts() {
                         {Number(post.longitude).toFixed(6)}
                       </TableCell>
                       <TableCell>{post.radius_m} m</TableCell>
+                      <TableCell>{post.interval_minutes || 120} mnt</TableCell>
                       {!selectedSite && (
                         <TableCell className="text-xs">
                           {sites.find((s) => s.id === post.site_id)?.name || post.site_id}
@@ -622,6 +671,14 @@ export default function Posts() {
                       {selectedSite && (
                       <TableCell>
                         <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => { setChecklistPost(post); fetchChecklist(post.id); }}
+                          >
+                            <ClipboardList className="w-4 h-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Checklist</span>
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
@@ -651,50 +708,46 @@ export default function Posts() {
       </Card>
 
       {qrPost && (
-        <Modal
-          title={`QR Code — ${qrPost.name}`}
-          onClose={() => setQrPost(null)}
-          footer={
-            <>
-              <Button onClick={handlePrint}>
-                <Printer className="w-4 h-4 mr-2" />
-                Print
-              </Button>
-              <Button variant="outline" onClick={() => setQrPost(null)}>
-                Tutup
-              </Button>
-            </>
-          }
-        >
+        <Modal title={`QR Code — ${qrPost.name}`} onClose={() => setQrPost(null)} footer={<><Button onClick={handlePrint}><Printer className="w-4 h-4 mr-2" />Print</Button><Button variant="outline" onClick={() => setQrPost(null)}>Tutup</Button></>}>
           <div className="flex flex-col items-center gap-3">
-            <div
-              id="qr-print-area"
-              className="flex flex-col items-center gap-2.5 p-5 border-2 border-dashed border-brutal-black rounded-brutal bg-saas-bg-secondary"
-            >
+            <div id="qr-print-area" className="flex flex-col items-center gap-2.5 p-5 border-2 border-dashed border-brutal-black rounded-brutal bg-saas-bg-secondary">
               <div className="w-[min(80vw,380px)] [&_svg]:!w-full [&_svg]:!h-auto">
-              <QRCodeSVG
-                value={`PATROLI:${qrPost.qr_token}`}
-                size={380}
-                level="M"
-                includeMargin
-              />
+              <QRCodeSVG value={`PATROLI:${qrPost.qr_token}`} size={380} level="M" includeMargin />
               </div>
-              <div className="text-lg font-semibold text-saas-text">
-                {qrPost.name}
-              </div>
-              {selectedSite && (
-                <div className="text-xs font-mono text-saas-text-muted">
-                  {selectedSite.name}
-                </div>
-              )}
+              <div className="text-lg font-semibold text-saas-text">{qrPost.name}</div>
+              {selectedSite && <div className="text-xs font-mono text-saas-text-muted">{selectedSite.name}</div>}
             </div>
-            {!qrPost.qr_token && (
-              <Alert variant="warning">
-                <AlertDescription>
-                  qr_token tidak tersedia (hanya dikirim untuk role admin).
-                </AlertDescription>
-              </Alert>
-            )}
+            {!qrPost.qr_token && <Alert variant="warning"><AlertDescription>qr_token tidak tersedia (hanya dikirim untuk role admin).</AlertDescription></Alert>}
+          </div>
+        </Modal>
+      )}
+
+      {checklistPost && (
+        <Modal wide title={`Checklist — ${checklistPost.name}`} onClose={() => setChecklistPost(null)} footer={<Button variant="outline" onClick={() => setChecklistPost(null)}>Tutup</Button>}>
+          <div className="flex gap-2 mb-4">
+            <Input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Item checklist baru" className="flex-1" onKeyDown={(e) => e.key === 'Enter' && addChecklistItem()} />
+            <Button onClick={addChecklistItem}>Tambah</Button>
+          </div>
+          <div className="space-y-1 max-h-80 overflow-y-auto">
+            {checklistItems.map((item) => (
+              <div key={item.id} className={`flex items-center justify-between p-2 rounded-brutal border border-saas-border ${!item.is_active ? 'opacity-50' : ''}`}>
+                {editingItem?.id === item.id ? (
+                  <div className="flex gap-2 flex-1">
+                    <Input value={editItemText} onChange={(e) => setEditItemText(e.target.value)} className="flex-1 h-8 text-sm" onKeyDown={(e) => e.key === 'Enter' && updateChecklistItem()} />
+                    <Button size="sm" onClick={updateChecklistItem}>Simpan</Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditingItem(null)}>Batal</Button>
+                  </div>
+                ) : (
+                  <><span className="text-sm">{item.item}</span>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => { setEditingItem(item); setEditItemText(item.item); }}>Edit</Button>
+                    <Button variant="ghost" size="sm" onClick={() => toggleChecklistItem(item)}>{item.is_active ? 'Nonaktifkan' : 'Aktifkan'}</Button>
+                    <Button variant="destructive" size="sm" onClick={() => deleteChecklistItem(item)}>Hapus</Button>
+                  </div></>
+                )}
+              </div>
+            ))}
+            {checklistItems.length === 0 && <p className="text-saas-text-muted text-sm">Belum ada item checklist.</p>}
           </div>
         </Modal>
       )}

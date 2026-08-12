@@ -39,6 +39,27 @@ export function SiteProvider({ children }) {
     fetchSites();
   }, [fetchSites]);
 
+  // Sync selectedSiteId to URL query param
+  const setSelectedSiteIdWithUrl = useCallback((value) => {
+    setSelectedSiteId(value);
+    const url = new URL(window.location.href);
+    if (value) {
+      url.searchParams.set('site_id', value);
+    } else {
+      url.searchParams.delete('site_id');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, []);
+
+  // Read initial site_id from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlSiteId = params.get('site_id');
+    if (urlSiteId && sites.some((s) => s.id === urlSiteId)) {
+      setSelectedSiteId(urlSiteId);
+    }
+  }, [sites]);
+
   const selectedSite = sites.find((s) => s.id === selectedSiteId) || null;
 
   return (
@@ -46,7 +67,7 @@ export function SiteProvider({ children }) {
       value={{
         sites,
         selectedSiteId,
-        setSelectedSiteId,
+        setSelectedSiteId: setSelectedSiteIdWithUrl,
         selectedSite,
         loading,
         error,
