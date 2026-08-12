@@ -449,11 +449,11 @@ export default function Posts() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="post-interval">Interval (menit, 10 - 1440)</Label>
+                  <Label htmlFor="post-interval">Interval (menit)</Label>
                   <Input
                     id="post-interval"
                     type="number"
-                    min="10"
+                    min="1"
                     max="1440"
                     value={form.interval_minutes}
                     onChange={(e) =>
