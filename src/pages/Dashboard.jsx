@@ -36,7 +36,6 @@ export default function Dashboard() {
   const { token } = useAuth();
   const { sites, selectedSiteId, selectedSite, loading: sitesLoading } = useSite();
   const [posts, setPosts] = useState([]);
-  const [shiftData, setShiftData] = useState({ shift: null, period: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [satpamLocations, setSatpamLocations] = useState({});
@@ -54,15 +53,6 @@ export default function Dashboard() {
     }
   }, []);
 
-  const fetchCurrentShift = useCallback(async () => {
-    try {
-      const res = await api.get("/api/shifts/current");
-      setShiftData(res.data.data || { shift: null, period: null });
-    } catch (err) {
-      console.error("Gagal memuat shift aktif:", err);
-    }
-  }, []);
-
   useEffect(() => {
     setLoading(sitesLoading);
   }, [sitesLoading]);
@@ -71,8 +61,7 @@ export default function Dashboard() {
     selectedSiteRef.current = selectedSiteId;
     setPosts([]);
     fetchPosts(selectedSiteId);
-    fetchCurrentShift();
-  }, [selectedSiteId, fetchPosts, fetchCurrentShift]);
+  }, [selectedSiteId, fetchPosts]);
 
   useEffect(() => {
     api.get("/api/config/status-labels").then((res) => setStatusLabels(res.data.data)).catch(() => {});
@@ -106,20 +95,8 @@ export default function Dashboard() {
       }
     };
 
-    const onShiftChanged = (payload) => {
-      setShiftData({
-        shift: payload.shift || null,
-        period: payload.period || null,
-      });
-      if (selectedSiteRef.current) {
-        fetchPosts(selectedSiteRef.current);
-      }
-      fetchCurrentShift();
-    };
-
     socket.on("post:scanned", onPostScanned);
     socket.on("posts:changed", onPostsChanged);
-    socket.on("shift:changed", onShiftChanged);
     socket.on("satpam:location", (data) => {
       setSatpamLocations((prev) => ({ ...prev, [data.id]: data }));
     });
@@ -134,11 +111,10 @@ export default function Dashboard() {
     return () => {
       socket.off("post:scanned", onPostScanned);
       socket.off("posts:changed", onPostsChanged);
-      socket.off("shift:changed", onShiftChanged);
       socket.off("satpam:location");
       socket.off("satpam:offline");
     };
-  }, [token, fetchPosts, fetchCurrentShift]);
+  }, [token, fetchPosts]);
 
   const greenCount = posts.filter((p) => p.status === "green").length;
   const yellowCount = posts.filter((p) => p.status === "yellow").length;

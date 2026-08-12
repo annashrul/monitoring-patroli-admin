@@ -67,6 +67,7 @@ export default function Posts() {
   const [geoLoading, setGeoLoading] = useState(false);
 
   const [qrPost, setQrPost] = useState(null);
+  const [statusLabels, setStatusLabels] = useState(null);
 
   const fetchPosts = useCallback(async (siteId) => {
     setLoadingPosts(true);
@@ -87,6 +88,10 @@ export default function Posts() {
     fetchPosts(selectedSiteId);
     setFormMode(null);
   }, [selectedSiteId, fetchPosts]);
+
+  useEffect(() => {
+    api.get("/api/config/status-labels").then((res) => setStatusLabels(res.data.data)).catch(() => {});
+  }, []);
 
   const openCreate = () => {
     setFormMode("create");
@@ -484,6 +489,7 @@ export default function Posts() {
                   picked={pickedPoint}
                   onPick={handleMapPick}
                   excludePostId={editingPost?.id}
+                  statusLabels={statusLabels}
                   height={360}
                 />
               </div>
@@ -517,6 +523,7 @@ export default function Posts() {
               posts={posts}
               picked={null}
               onPick={null}
+              statusLabels={statusLabels}
               height={300}
             />
           </CardContent>
@@ -536,6 +543,7 @@ export default function Posts() {
                     posts={sitePosts}
                     picked={null}
                     onPick={null}
+                    statusLabels={statusLabels}
                     height={220}
                   />
                 </CardContent>

@@ -18,7 +18,7 @@ import {
   Navigation,
   ClipboardList,
   Users,
-  Clock,
+  AlertTriangle,
   LogOut,
   Shield,
   Menu,
@@ -45,8 +45,8 @@ const MENU = [
   { to: "/sites", label: "Area (Sites)", icon: Navigation },
   { to: "/posts", label: "Titik Pos", icon: MapPin },
   { to: "/logs", label: "Riwayat Scan", icon: ClipboardList },
+  { to: "/temuan", label: "Temuan", icon: AlertTriangle },
   { to: "/users", label: "Pengguna", icon: Users },
-  { to: "/shifts", label: "Shift", icon: Clock },
 ];
 
 export default function Layout() {

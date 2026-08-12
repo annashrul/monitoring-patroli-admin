@@ -8,7 +8,7 @@ import Sites from './pages/Sites';
 import Posts from './pages/Posts';
 import Logs from './pages/Logs';
 import Users from './pages/Users';
-import Shifts from './pages/Shifts';
+import Temuan from './pages/Temuan';
 
 export default function App() {
   return (
@@ -30,7 +30,7 @@ export default function App() {
               <Route path="posts" element={<Posts />} />
               <Route path="logs" element={<Logs />} />
               <Route path="users" element={<Users />} />
-              <Route path="shifts" element={<Shifts />} />
+              <Route path="temuan" element={<Temuan />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
