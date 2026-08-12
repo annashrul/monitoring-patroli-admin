@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [satpamLocations, setSatpamLocations] = useState({});
+  const [statusLabels, setStatusLabels] = useState(null);
   const selectedSiteRef = useRef("");
 
   const fetchPosts = useCallback(async (siteId) => {
@@ -72,6 +73,10 @@ export default function Dashboard() {
     fetchPosts(selectedSiteId);
     fetchCurrentShift();
   }, [selectedSiteId, fetchPosts, fetchCurrentShift]);
+
+  useEffect(() => {
+    api.get("/api/config/status-labels").then((res) => setStatusLabels(res.data.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -247,6 +252,7 @@ export default function Dashboard() {
                   site={selectedSite}
                   posts={posts}
                   satpamLocations={satpamLocations}
+                  statusLabels={statusLabels}
                   height="min(520px, 70vh)"
                 />
               </CardContent>
@@ -268,6 +274,7 @@ export default function Dashboard() {
                         site={s}
                         posts={sitePosts}
                         satpamLocations={satpamLocations}
+                        statusLabels={statusLabels}
                         height={280}
                       />
                     </CardContent>
