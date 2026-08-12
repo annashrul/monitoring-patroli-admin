@@ -41,6 +41,7 @@ import {
 const EMPTY_FORM = {
   name: "",
   radius_m: 20,
+  interval_minutes: 120,
   latitude: "",
   longitude: "",
   is_active: true,
@@ -101,6 +102,7 @@ export default function Posts() {
     setForm({
       name: post.name,
       radius_m: post.radius_m,
+      interval_minutes: post.interval_minutes || 120,
       latitude: post.latitude,
       longitude: post.longitude,
       is_active: post.is_active,
@@ -198,6 +200,7 @@ export default function Posts() {
           latitude: pickedPoint.lat,
           longitude: pickedPoint.lng,
           radius_m: radius,
+          interval_minutes: parseInt(form.interval_minutes, 10) || 120,
         });
         setNotice("Pos berhasil dibuat.");
       } else {
@@ -206,6 +209,7 @@ export default function Posts() {
           latitude: pickedPoint.lat,
           longitude: pickedPoint.lng,
           radius_m: radius,
+          interval_minutes: parseInt(form.interval_minutes, 10) || 120,
           is_active: !!form.is_active,
         });
         setNotice("Pos berhasil diperbarui.");
@@ -364,7 +368,7 @@ export default function Posts() {
               </Alert>
             )}
             <form id="post-form" onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="post-name">Nama Pos</Label>
                   <Input
@@ -390,6 +394,19 @@ export default function Posts() {
                       setForm((f) => ({ ...f, radius_m: e.target.value }))
                     }
                     required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="post-interval">Interval (menit, 10 - 1440)</Label>
+                  <Input
+                    id="post-interval"
+                    type="number"
+                    min="10"
+                    max="1440"
+                    value={form.interval_minutes}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, interval_minutes: e.target.value }))
+                    }
                   />
                 </div>
               </div>

@@ -26,6 +26,7 @@ import {
   MapPin,
   Clock,
   CheckCircle,
+  AlertTriangle,
   XCircle,
   Users,
   TrendingUp,
@@ -83,7 +84,7 @@ export default function Dashboard() {
           p.id === payload.post_id
             ? {
                 ...p,
-                status: "scanned",
+                status: "green",
                 last_scan: {
                   scanned_at: payload.scanned_at,
                   scanned_by_name: payload.scanned_by?.name || "-",
@@ -134,33 +135,32 @@ export default function Dashboard() {
     };
   }, [token, fetchPosts, fetchCurrentShift]);
 
-  const scannedCount = posts.filter((p) => p.status === "scanned").length;
+  const greenCount = posts.filter((p) => p.status === "green").length;
+  const yellowCount = posts.filter((p) => p.status === "yellow").length;
+  const redCount = posts.filter((p) => p.status === "red").length;
   const activePosts = posts.filter((p) => p.is_active);
-  const scannedActive = activePosts.filter((p) => p.status === "scanned").length;
 
   const statCards = [
     {
       icon: CheckCircle,
-      label: "Pos Sudah Discan (Aktif)",
-      value: `${scannedActive}/${activePosts.length}`,
+      label: "Hijau (Aman)",
+      value: greenCount,
       color: "text-saas-success",
       bgColor: "bg-saas-success-light",
     },
     {
-      icon: Clock,
-      label: "Shift Aktif Saat Ini",
-      value: shiftData.shift ? shiftData.shift.name : "-",
-      color: "text-saas-primary",
-      bgColor: "bg-saas-primary-light",
-    },
-    {
-      icon: MapPin,
-      label: "Jam Shift",
-      value: shiftData.shift
-        ? `${shiftData.shift.start_time} - ${shiftData.shift.end_time}`
-        : "-",
+      icon: AlertTriangle,
+      label: "Kuning (Harus Scan Ulang)",
+      value: yellowCount,
       color: "text-saas-warning",
       bgColor: "bg-saas-warning-light",
+    },
+    {
+      icon: XCircle,
+      label: "Merah (Belum Scanned)",
+      value: redCount,
+      color: "text-saas-danger",
+      bgColor: "bg-saas-danger-light",
     },
     {
       icon: Users,
@@ -260,7 +260,7 @@ export default function Dashboard() {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base">{s.name}</CardTitle>
                       <CardDescription>
-                        {sitePosts.length} pos • {sitePosts.filter((p) => p.status === 'scanned').length} scanned
+                        {sitePosts.length} pos • {sitePosts.filter((p) => p.status === 'green').length} hijau
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
@@ -317,15 +317,18 @@ export default function Dashboard() {
                               )}
                             </TableCell>
                             <TableCell>
-                              <Badge
-                                variant={
-                                  p.status === "scanned" ? "success" : "destructive"
-                                }
-                              >
-                                {p.status === "scanned"
-                                  ? "Sudah Discan"
-                                  : "Belum Discan"}
-                              </Badge>
+                                <Badge
+                                  variant={
+                                    p.status === "green" ? "success" :
+                                    p.status === "yellow" ? "warning" : "destructive"
+                                  }
+                                >
+                                  {p.status === "green"
+                                    ? "Hijau"
+                                    : p.status === "yellow"
+                                    ? "Kuning"
+                                    : "Merah"}
+                                </Badge>
                             </TableCell>
                             <TableCell>{p.radius_m} m</TableCell>
                             <TableCell className="whitespace-nowrap">
@@ -341,7 +344,7 @@ export default function Dashboard() {
                     </Table>
                   </div>
                   <p className="text-xs font-medium text-saas-text-muted mt-3">
-                    Total scanned (termasuk pos nonaktif): {scannedCount}/
+                    Hijau: {greenCount} | Kuning: {yellowCount} | Merah: {redCount} /
                     {posts.length}
                   </p>
                 </>

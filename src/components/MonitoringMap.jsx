@@ -98,15 +98,21 @@ export default function MonitoringMap({ site, sites, posts, satpamLocations = {}
           <Marker
             key={post.id}
             position={[post.latitude, post.longitude]}
-            icon={pinIcon(post.status === 'scanned' ? '#16a34a' : '#dc2626')}
+            icon={pinIcon(
+              post.status === 'green' ? '#16a34a' :
+              post.status === 'yellow' ? '#f59e0b' : '#dc2626'
+            )}
           >
             <Popup>
               <div className="text-sm font-sans">
                 <strong>{post.name}</strong>
                 <div className="mt-1">
                   Status:{' '}
-                  <Badge variant={post.status === 'scanned' ? 'success' : 'destructive'}>
-                    {post.status === 'scanned' ? 'Sudah Discan' : 'Belum Discan'}
+                  <Badge variant={
+                    post.status === 'green' ? 'success' :
+                    post.status === 'yellow' ? 'warning' : 'destructive'}>
+                    {post.status === 'green' ? 'Hijau' :
+                     post.status === 'yellow' ? 'Kuning' : 'Merah'}
                   </Badge>
                 </div>
                 <div className="mt-1">Radius: {post.radius_m} m</div>
