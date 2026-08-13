@@ -6,10 +6,12 @@ import React, {
   useCallback,
 } from "react";
 import api, { getErrorMessage } from "./api";
+import { useAuth } from "./AuthContext";
 
 const SiteContext = createContext();
 
 export function SiteProvider({ children }) {
+  const { token } = useAuth();
   const [sites, setSites] = useState([]);
   const [selectedSiteId, setSelectedSiteId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -36,8 +38,10 @@ export function SiteProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    fetchSites();
-  }, [fetchSites]);
+    if (token) {
+      fetchSites();
+    }
+  }, [fetchSites, token]);
 
   // Sync selectedSiteId to URL query param
   const setSelectedSiteIdWithUrl = useCallback((value) => {

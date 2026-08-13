@@ -1,10 +1,11 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import FitBounds from './FitBounds';
 import { Badge } from './ui/badge';
 import { Skeleton } from './ui/skeleton';
 import { Button } from './ui/button';
+import MapFullscreenButton from './MapFullscreenButton';
 
 const KEY = 'AIzaSyDqD1Z03FoLnIGJTbpAgRvjcchrR-NiICk';
 const GMAP_URL = `https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${KEY}`;
@@ -64,6 +65,7 @@ export default function MonitoringMap({ site, sites, posts, satpamLocations = {}
   const allPolygons = allSites.map((s) => s.polygon).filter((p) => Array.isArray(p) && p.length >= 3);
   const [mapReady, setMapReady] = useState(false);
   const [satellite, setSatellite] = useState(false);
+  const mapContainerRef = useRef(null);
   const center =
     polygon.length > 0
       ? [polygon[0].lat, polygon[0].lng]
@@ -73,7 +75,7 @@ export default function MonitoringMap({ site, sites, posts, satpamLocations = {}
 
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
   return (
-    <div className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
+    <div ref={mapContainerRef} className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
       {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
       <MapContainer center={center} zoom={16} maxZoom={21} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
         <TileLayer
@@ -152,6 +154,7 @@ export default function MonitoringMap({ site, sites, posts, satpamLocations = {}
         )}
       </div>
       <div className="absolute bottom-4 left-2 z-[999] flex gap-1">
+        <MapFullscreenButton containerRef={mapContainerRef} />
         <Button
           size="sm"
           variant={satellite ? "outline" : "default"}

@@ -1,15 +1,15 @@
 import { io } from 'socket.io-client';
+import { getApiBaseUrl } from './config';
 
 let socket = null;
 
 /**
  * Mengembalikan singleton socket.io-client yang terkoneksi dengan auth { token }.
- * Jika sudah ada koneksi, kembalikan yang lama (server & port sama dengan API).
  */
-export function connectSocket(token) {
+export async function connectSocket(token) {
   if (socket) return socket;
 
-  const url = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  const url = await getApiBaseUrl();
   socket = io(url, {
     auth: { token },
     transports: ['websocket', 'polling'],

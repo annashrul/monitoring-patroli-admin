@@ -219,7 +219,7 @@ export default function Sites() {
         <Modal
           title={formMode === "create" ? "Tambah Site Baru" : "Edit Site"}
           onClose={closeForm}
-          wide
+          fullWidth
           footer={
             <div className="flex gap-3">
               <Button type="submit" form="site-form" disabled={saving}>

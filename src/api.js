@@ -1,11 +1,14 @@
 import axios from 'axios';
+import { getApiBaseUrl } from './config';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
 });
 
-// Tambahkan token JWT ke setiap request
-api.interceptors.request.use((config) => {
+// Set base URL dinamis dari database di setiap request
+api.interceptors.request.use(async (config) => {
+  const base = await getApiBaseUrl();
+  config.baseURL = base;
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

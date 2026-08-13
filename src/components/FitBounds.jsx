@@ -18,7 +18,7 @@ export default function FitBounds({ polygon, fallbackPoints }) {
 
     try {
       const bounds = L.latLngBounds(pts);
-      map.fitBounds(bounds.pad(0.15));
+      map.fitBounds(bounds.pad(0.05));
     } catch {
       // abaikan jika bounds tidak valid
     }

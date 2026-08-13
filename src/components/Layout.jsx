@@ -238,9 +238,9 @@ export default function Layout() {
       </Sheet>
 
       <main
-        className={`flex-1 ${mainMarginLeft} min-h-screen overflow-x-hidden`}
+        className={`flex-1 ${mainMarginLeft} h-screen flex flex-col overflow-hidden`}
       >
-        <header className="sticky top-0 z-40 h-16 bg-saas-bg border-b-2 border-brutal-black flex items-center justify-between px-4 lg:px-6 shadow-brutal-sm">
+        <header className="shrink-0 z-40 h-16 bg-saas-bg border-b-2 border-brutal-black flex items-center justify-between px-4 lg:px-6 shadow-brutal-sm">
           <div className="flex items-center gap-4 lg:hidden">
             <Button
               variant="ghost"
@@ -317,7 +317,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <div className="p-4 pt-16 lg:pt-6 lg:p-6">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6">
           <Outlet />
         </div>
       </main>

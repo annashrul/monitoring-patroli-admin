@@ -69,7 +69,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!token) return;
-    const socket = connectSocket(token);
+    let socket = null;
+    let cancelled = false;
 
     const onPostScanned = (payload) => {
       if (payload.site_id !== selectedSiteRef.current) return;
@@ -95,24 +96,31 @@ export default function Dashboard() {
       }
     };
 
-    socket.on("post:scanned", onPostScanned);
-    socket.on("posts:changed", onPostsChanged);
-    socket.on("satpam:location", (data) => {
-      setSatpamLocations((prev) => ({ ...prev, [data.id]: data }));
-    });
-    socket.on("satpam:offline", (data) => {
-      setSatpamLocations((prev) => {
-        const next = { ...prev };
-        delete next[data.id];
-        return next;
+    connectSocket(token).then((s) => {
+      if (cancelled) return;
+      socket = s;
+      socket.on("post:scanned", onPostScanned);
+      socket.on("posts:changed", onPostsChanged);
+      socket.on("satpam:location", (data) => {
+        setSatpamLocations((prev) => ({ ...prev, [data.id]: data }));
+      });
+      socket.on("satpam:offline", (data) => {
+        setSatpamLocations((prev) => {
+          const next = { ...prev };
+          delete next[data.id];
+          return next;
+        });
       });
     });
 
     return () => {
-      socket.off("post:scanned", onPostScanned);
-      socket.off("posts:changed", onPostsChanged);
-      socket.off("satpam:location");
-      socket.off("satpam:offline");
+      cancelled = true;
+      if (socket) {
+        socket.off("post:scanned", onPostScanned);
+        socket.off("posts:changed", onPostsChanged);
+        socket.off("satpam:location");
+        socket.off("satpam:offline");
+      }
     };
   }, [token, fetchPosts]);
 

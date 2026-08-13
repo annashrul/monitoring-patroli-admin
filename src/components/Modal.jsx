@@ -8,7 +8,7 @@ import {
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 
-export default function Modal({ title, onClose, children, footer, wide }) {
+export default function Modal({ title, onClose, children, footer, wide, fullWidth }) {
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
@@ -22,7 +22,13 @@ export default function Modal({ title, onClose, children, footer, wide }) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className={wide ? "max-w-[calc(100vw-2rem)] sm:max-w-[720px]" : "max-w-[calc(100vw-2rem)] sm:max-w-[460px]"}>
+      <DialogContent className={
+        fullWidth
+          ? "max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] h-[calc(100vh-2rem)]"
+          : wide
+          ? "max-w-[calc(100vw-2rem)] sm:max-w-[720px]"
+          : "max-w-[calc(100vw-2rem)] sm:max-w-[460px]"
+      }>
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="pr-2">{title}</DialogTitle>

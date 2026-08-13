@@ -402,7 +402,7 @@ export default function Posts() {
               : `Edit Pos — ${editingPost?.name}`
           }
           onClose={closeForm}
-          wide
+          fullWidth
           footer={
             <div className="flex gap-3">
               <Button type="submit" form="post-form" disabled={saving}>

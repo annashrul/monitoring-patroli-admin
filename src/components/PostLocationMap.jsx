@@ -1,10 +1,11 @@
 import { MapContainer, TileLayer, Polygon, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import FitBounds from './FitBounds';
 import CurrentLocation from './CurrentLocation';
 import { Skeleton } from './ui/skeleton';
 import { Button } from './ui/button';
+import MapFullscreenButton from './MapFullscreenButton';
 
 const KEY = 'AIzaSyDqD1Z03FoLnIGJTbpAgRvjcchrR-NiICk';
 const GMAP_URL = `https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${KEY}`;
@@ -74,6 +75,7 @@ export default function PostLocationMap({
 }) {
   const [mapReady, setMapReady] = useState(false);
   const [satellite, setSatellite] = useState(false);
+  const mapContainerRef = useRef(null);
   const center =
     Array.isArray(polygon) && polygon.length > 0
       ? [polygon[0].lat, polygon[0].lng]
@@ -81,7 +83,7 @@ export default function PostLocationMap({
 
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
   return (
-    <div className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
+    <div ref={mapContainerRef} className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
       {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
       <MapContainer center={center} zoom={18} maxZoom={21} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
         <MapInvalidator />
@@ -127,6 +129,7 @@ export default function PostLocationMap({
         )}
       </div>
       <div className="absolute bottom-4 left-2 z-[999] flex gap-1">
+        <MapFullscreenButton containerRef={mapContainerRef} />
         <Button
           size="sm"
           variant={satellite ? "outline" : "default"}
