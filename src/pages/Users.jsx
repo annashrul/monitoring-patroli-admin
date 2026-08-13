@@ -480,6 +480,7 @@ export default function Users() {
                     <TableHead>Nama</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Site</TableHead>
+                    <TableHead>Warna</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="min-w-[140px] sm:min-w-[180px]">Aksi</TableHead>
                   </TableRow>
@@ -506,6 +507,12 @@ export default function Users() {
                       </TableCell>
                       <TableCell className="text-xs text-saas-text-muted">
                         {u.site_id ? (sites.find((s) => s.id === u.site_id)?.name || u.site_id) : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="w-4 h-4 rounded-full border border-brutal-black" style={{ backgroundColor: u.color || "#3B82F6" }} />
+                          <span className="text-xs font-mono">{u.color || "#3B82F6"}</span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={u.is_active ? "success" : "muted"}>
