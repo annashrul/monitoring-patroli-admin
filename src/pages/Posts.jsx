@@ -4,6 +4,7 @@ import api, { getErrorMessage } from "../api";
 import { useSite } from "../SiteContext";
 import Modal from "../components/Modal";
 import PostLocationMap from "../components/PostLocationMap";
+import Pagination from "../components/Pagination";
 import { isPointInPolygon } from "../utils/geo";
 import {
   Card,
@@ -56,9 +57,15 @@ export default function Posts() {
     loading: loadingSites,
   } = useSite();
   const [posts, setPosts] = useState([]);
+  const [mapPosts, setMapPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const PAGE_SIZE = 10;
 
   const [formMode, setFormMode] = useState(null);
   const [editingPost, setEditingPost] = useState(null);
@@ -68,20 +75,33 @@ export default function Posts() {
   const [geoLoading, setGeoLoading] = useState(false);
 
   const [qrPost, setQrPost] = useState(null);
-  const [statusLabels, setStatusLabels] = useState(null);
   const [checklistPost, setChecklistPost] = useState(null);
   const [checklistItems, setChecklistItems] = useState([]);
   const [newItem, setNewItem] = useState("");
   const [editingItem, setEditingItem] = useState(null);
   const [editItemText, setEditItemText] = useState("");
 
-  const fetchPosts = useCallback(async (siteId) => {
+  const fetchPosts = useCallback(async (siteId, query) => {
     setLoadingPosts(true);
     try {
+      const params = new URLSearchParams();
+      if (query?.search) params.set("search", query.search);
+      params.set("page", String(query?.page || 1));
+      params.set("limit", String(PAGE_SIZE));
+
       const res = siteId
-        ? await api.get(`/api/sites/${siteId}/posts`)
-        : await api.get("/api/posts?all=true");
+        ? await api.get(`/api/sites/${siteId}/posts`, { params })
+        : await api.get("/api/posts?all=true", { params });
+
       setPosts(res.data.data || []);
+      const meta = res.data.meta;
+      if (meta) {
+        setTotalPages(meta.total_pages || 1);
+        setPage(meta.page || 1);
+      } else {
+        setTotalPages(1);
+        setPage(1);
+      }
     } catch (err) {
       setError(getErrorMessage(err, "Gagal memuat daftar pos."));
     } finally {
@@ -89,15 +109,35 @@ export default function Posts() {
     }
   }, []);
 
-  useEffect(() => {
-    setPosts([]);
-    fetchPosts(selectedSiteId);
-    setFormMode(null);
-  }, [selectedSiteId, fetchPosts]);
+  // Peta perlu seluruh pos (bukan yang dipaginasi), jadi dimuat terpisah tanpa limit.
+  const fetchMapPosts = useCallback(async (siteId) => {
+    try {
+      const res = siteId
+        ? await api.get(`/api/sites/${siteId}/posts`, { params: { limit: 1000 } })
+        : await api.get("/api/posts?all=true", { params: { limit: 1000 } });
+      setMapPosts(res.data.data || []);
+    } catch {
+      setMapPosts([]);
+    }
+  }, []);
 
   useEffect(() => {
-    api.get("/api/config/status-labels").then((res) => setStatusLabels(res.data.data)).catch(() => {});
-  }, []);
+    setPosts([]);
+    setMapPosts([]);
+    setPage(1);
+    setSearch("");
+    setLoadingPosts(true);
+    fetchMapPosts(selectedSiteId);
+    setFormMode(null);
+  }, [selectedSiteId, fetchMapPosts]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchPosts(selectedSiteId, { search, page: 1 });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search, selectedSiteId, fetchPosts]);
 
   const openCreate = () => {
     setFormMode("create");
@@ -226,7 +266,8 @@ export default function Posts() {
         setNotice("Pos berhasil diperbarui.");
       }
       closeForm();
-      fetchPosts(selectedSiteId);
+      fetchPosts(selectedSiteId, { search, page });
+      fetchMapPosts(selectedSiteId);
     } catch (err) {
       setFormError(getErrorMessage(err, "Gagal menyimpan pos."));
     } finally {
@@ -248,7 +289,8 @@ export default function Posts() {
       await api.delete(`/api/posts/${post.id}`);
       setNotice(`Pos "${post.name}" berhasil dihapus.`);
       if (editingPost?.id === post.id) closeForm();
-      fetchPosts(selectedSiteId);
+      fetchPosts(selectedSiteId, { search, page });
+      fetchMapPosts(selectedSiteId);
     } catch (err) {
       setError(getErrorMessage(err, "Gagal menghapus pos."));
     }
@@ -532,11 +574,10 @@ export default function Posts() {
               <div className="space-y-2">
                 <PostLocationMap
                   polygon={selectedSite?.polygon || []}
-                  posts={posts}
+                  posts={mapPosts}
                   picked={pickedPoint}
                   onPick={handleMapPick}
                   excludePostId={editingPost?.id}
-                  statusLabels={statusLabels}
                   height={360}
                 />
               </div>
@@ -567,10 +608,9 @@ export default function Posts() {
           <CardContent className="p-0">
             <PostLocationMap
               polygon={selectedSite.polygon || []}
-              posts={posts}
+              posts={mapPosts}
               picked={null}
               onPick={null}
-              statusLabels={statusLabels}
               height={300}
             />
           </CardContent>
@@ -578,7 +618,7 @@ export default function Posts() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {sites.map((s) => {
-            const sitePosts = posts.filter((p) => p.site_id === s.id);
+            const sitePosts = mapPosts.filter((p) => p.site_id === s.id);
             return (
               <Card key={s.id} className="overflow-hidden">
                 <CardHeader className="pb-2">
@@ -590,7 +630,6 @@ export default function Posts() {
                     posts={sitePosts}
                     picked={null}
                     onPick={null}
-                    statusLabels={statusLabels}
                     height={220}
                   />
                 </CardContent>
@@ -601,13 +640,24 @@ export default function Posts() {
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>
-            Daftar Pos {selectedSite ? `— ${selectedSite.name}` : "— Semua Site"}
-          </CardTitle>
-          <CardDescription>
-            {selectedSite ? "Kelola pos patroli pada site ini" : "Daftar semua pos dari semua site"}
-          </CardDescription>
+        <CardHeader className="flex-row items-center justify-between gap-3 flex-wrap">
+          <div>
+            <CardTitle>
+              Daftar Pos {selectedSite ? `— ${selectedSite.name}` : "— Semua Site"}
+            </CardTitle>
+            <CardDescription>
+              {selectedSite ? "Kelola pos patroli pada site ini" : "Daftar semua pos dari semua site"}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2 max-w-sm">
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari nama pos..."
+              className="h-9 text-sm"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {loadingPosts ? (
@@ -704,6 +754,15 @@ export default function Posts() {
               </Table>
             </div>
           )}
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(p) => {
+              setPage(p);
+              fetchPosts(selectedSiteId, { search, page: p });
+            }}
+          />
         </CardContent>
       </Card>
 

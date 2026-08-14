@@ -132,9 +132,9 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
 
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
   return (
-    <div>
-      <div className="relative mb-2">
-        <div className="relative max-w-sm">
+    <div ref={mapContainerRef} className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
+      <div className="absolute top-2 left-2 z-[1000] w-[min(90%,360px)]">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-saas-text-muted z-10" />
           <Input
             value={searchQuery}
@@ -148,7 +148,7 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
         </div>
         {searchResults.length > 0 && (
           <div
-            className="absolute left-0 right-0 top-full mt-1 max-w-sm bg-white border-2 border-brutal-black rounded-brutal overflow-hidden shadow-brutal max-h-60 overflow-y-auto z-[2000]"
+            className="absolute left-0 right-0 top-full mt-1 bg-white border-2 border-brutal-black rounded-brutal overflow-hidden shadow-brutal max-h-60 overflow-y-auto z-[2000]"
             onScroll={(e) => {
               const el = e.currentTarget;
               if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10 && visibleCount < searchResults.length) {
@@ -172,7 +172,6 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
           </div>
         )}
       </div>
-      <div ref={mapContainerRef} className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
         {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
         <MapContainer center={center} zoom={18} maxZoom={21} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
           <MapInvalidator />
@@ -232,6 +231,5 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
           </Button>
         </div>
       </div>
-    </div>
   );
 }

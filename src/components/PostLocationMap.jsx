@@ -70,7 +70,6 @@ export default function PostLocationMap({
   picked,
   onPick,
   excludePostId,
-  statusLabels,
   height = "min(340px, 70vh)",
 }) {
   const [mapReady, setMapReady] = useState(false);
@@ -119,15 +118,6 @@ export default function PostLocationMap({
           <Marker position={[picked.lat, picked.lng]} icon={pickedIcon()} />
         )}
       </MapContainer>
-      <div className="absolute top-2 right-2 z-[999] bg-saas-bg-secondary/90 border-2 border-brutal-black rounded-brutal px-3 py-2 text-xs font-bold">
-        {statusLabels && (
-          <>
-            <div className="flex items-center gap-2 mb-1"><span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: statusLabels.green?.color || '#16a34a' }} /> {statusLabels.green?.label || 'Aman'}</div>
-            <div className="flex items-center gap-2 mb-1"><span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: statusLabels.yellow?.color || '#f59e0b' }} /> {statusLabels.yellow?.label || 'Scan Ulang'}</div>
-            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: statusLabels.red?.color || '#dc2626' }} /> {statusLabels.red?.label || 'Belum'}</div>
-          </>
-        )}
-      </div>
       <div className="absolute bottom-4 left-2 z-[999] flex gap-1">
         <MapFullscreenButton containerRef={mapContainerRef} />
         <Button

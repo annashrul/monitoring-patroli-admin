@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useSite } from "../SiteContext";
+import Pagination from "../components/Pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/ui/table";
 import { Skeleton } from "../components/ui/skeleton";
 import Modal from "../components/Modal";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { Eye } from "lucide-react";
 
 const CAT_LABELS = { general: "Umum", security: "Keamanan", cleanliness: "Kebersihan", damage: "Kerusakan", other: "Lainnya" };
@@ -17,17 +19,46 @@ export default function Temuan() {
   const [findings, setFindings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const PAGE_SIZE = 20;
 
-  const fetchFindings = async () => {
+  const fetchFindings = async (targetPage = 1, searchQuery = search) => {
     setLoading(true);
     try {
-      const params = selectedSiteId ? `?site_id=${selectedSiteId}` : "";
-      const res = await api.get(`/api/findings${params}`);
+      const params = new URLSearchParams();
+      if (selectedSiteId) params.set("site_id", selectedSiteId);
+      if (searchQuery) params.set("search", searchQuery);
+      params.set("page", String(targetPage));
+      params.set("limit", String(PAGE_SIZE));
+
+      const res = await api.get("/api/findings", { params });
       setFindings(res.data.data || []);
+
+      const meta = res.data.meta;
+      if (meta) {
+        setTotalPages(meta.total_pages || 1);
+        setPage(meta.page || 1);
+      } else {
+        setTotalPages(1);
+        setPage(1);
+      }
     } catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchFindings(); }, [selectedSiteId]);
+  useEffect(() => {
+    setPage(1);
+    setSearch("");
+  }, [selectedSiteId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchFindings(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search, selectedSiteId]);
 
   return (
     <div>
@@ -35,7 +66,18 @@ export default function Temuan() {
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">Laporan Findings</h1>
       </div>
       <Card>
-        <CardHeader><CardTitle>Daftar Findings</CardTitle></CardHeader>
+        <CardHeader className="flex-row items-center justify-between gap-3 flex-wrap">
+          <CardTitle>Daftar Findings</CardTitle>
+          <div className="flex items-center gap-2 max-w-sm">
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari deskripsi..."
+              className="h-9 text-sm"
+            />
+          </div>
+        </CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-2 py-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
@@ -71,6 +113,15 @@ export default function Temuan() {
               </Table>
             </div>
           )}
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(p) => {
+              setPage(p);
+              fetchFindings(p);
+            }}
+          />
         </CardContent>
       </Card>
 

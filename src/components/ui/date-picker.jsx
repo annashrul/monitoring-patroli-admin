@@ -1,7 +1,7 @@
 import * as React from "react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "./button";
 import { Calendar } from "./calendar";
@@ -25,6 +25,19 @@ function DatePicker({ value, onChange, placeholder = "Pilih tanggal", className 
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {dateValue ? format(dateValue, "dd MMMM yyyy", { locale: id }) : placeholder}
+          {dateValue && (
+            <span
+              role="button"
+              aria-label="Hapus tanggal"
+              className="ml-auto -mr-1 rounded p-0.5 text-saas-text-muted hover:bg-saas-bg-tertiary hover:text-saas-text"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange({ target: { value: "" } });
+              }}
+            >
+              <X className="h-4 w-4" />
+            </span>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">

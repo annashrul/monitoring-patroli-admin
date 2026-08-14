@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api, { getErrorMessage } from "../api";
 import { useAuth } from "../AuthContext";
 import { useSite } from "../SiteContext";
+import Pagination from "../components/Pagination";
 import {
   Card,
   CardContent,
@@ -37,6 +38,11 @@ export default function Users() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const PAGE_SIZE = 10;
+
   const [formMode, setFormMode] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [createForm, setCreateForm] = useState(EMPTY_CREATE);
@@ -44,12 +50,26 @@ export default function Users() {
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (targetPage = 1, searchQuery = search) => {
     setLoading(true);
     setError("");
     try {
-      const res = await api.get("/api/users");
+      const params = new URLSearchParams();
+      if (searchQuery) params.set("search", searchQuery);
+      params.set("page", String(targetPage));
+      params.set("limit", String(PAGE_SIZE));
+
+      const res = await api.get("/api/users", { params });
       setAllUsers(res.data.data || []);
+
+      const meta = res.data.meta;
+      if (meta) {
+        setTotalPages(meta.total_pages || 1);
+        setPage(meta.page || 1);
+      } else {
+        setTotalPages(1);
+        setPage(1);
+      }
     } catch (err) {
       setError(getErrorMessage(err, "Gagal memuat daftar pengguna."));
     } finally {
@@ -58,8 +78,16 @@ export default function Users() {
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(1);
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchUsers(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const users = (selectedSiteId
     ? allUsers.filter((u) => u.site_id === selectedSiteId || u.role === 'owner')
@@ -117,7 +145,7 @@ export default function Users() {
       });
       setNotice("Pengguna berhasil dibuat.");
       closeForm();
-      fetchUsers();
+      fetchUsers(page, search);
     } catch (err) {
       setFormError(getErrorMessage(err, "Gagal membuat pengguna."));
     } finally {
@@ -145,7 +173,7 @@ export default function Users() {
       await api.put(`/api/users/${editingUser.id}`, body);
       setNotice("Pengguna berhasil diperbarui.");
       closeForm();
-      fetchUsers();
+      fetchUsers(page, search);
     } catch (err) {
       setFormError(getErrorMessage(err, "Gagal memperbarui pengguna."));
     } finally {
@@ -161,7 +189,7 @@ export default function Users() {
       await api.delete(`/api/users/${u.id}`);
       setNotice(`Pengguna "${u.username}" berhasil dihapus.`);
       if (editingUser?.id === u.id) closeForm();
-      fetchUsers();
+      fetchUsers(page, search);
     } catch (err) {
       setError(getErrorMessage(err, "Gagal menghapus pengguna."));
     }
@@ -459,8 +487,17 @@ export default function Users() {
       )}
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex-row items-center justify-between gap-3 flex-wrap">
           <CardTitle>Daftar Pengguna</CardTitle>
+          <div className="flex items-center gap-2 max-w-sm">
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari nama atau username..."
+              className="h-9 text-sm"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -536,7 +573,7 @@ export default function Users() {
                                 try {
                                   await api.post(`/api/users/${u.id}/release`);
                                   setNotice(`Sesi ${u.name} dilepas.`);
-                                  fetchUsers();
+                                  fetchUsers(page, search);
                                 } catch (err) {
                                   setError(getErrorMessage(err, "Gagal melepas sesi."));
                                 }
@@ -566,6 +603,15 @@ export default function Users() {
               </Table>
             </div>
           )}
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(p) => {
+              setPage(p);
+              fetchUsers(p, search);
+            }}
+          />
         </CardContent>
       </Card>
     </div>

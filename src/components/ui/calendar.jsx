@@ -26,10 +26,10 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
         weekday: "text-saas-text-muted rounded-md w-9 font-medium text-[0.8rem] uppercase tracking-wider",
         week: "flex w-full mt-2",
         day: cn(
-          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-saas-bg-tertiary",
+          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
         ),
         day_button: cn(
-          "w-9 h-9 p-0 font-medium text-sm rounded-brutal border-2 border-transparent text-saas-text hover:bg-saas-primary hover:text-white hover:border-brutal-black transition-colors",
+          "w-9 h-9 p-0 font-medium text-sm rounded-brutal border-2 border-transparent text-inherit hover:bg-saas-primary hover:text-white hover:border-brutal-black transition-colors",
         ),
         selected: cn(
           "bg-saas-primary text-white border-brutal-black font-bold",

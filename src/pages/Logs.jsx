@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import api, { getErrorMessage } from "../api";
 import { useSite } from "../SiteContext";
+import Pagination from "../components/Pagination";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { DatePicker } from "../components/ui/date-picker";
@@ -80,6 +79,10 @@ export default function Logs() {
   const [error, setError] = useState("");
   const [detailLog, setDetailLog] = useState(null);
 
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const PAGE_SIZE = 10;
+
   useEffect(() => {
     (async () => {
       try {
@@ -106,7 +109,7 @@ export default function Logs() {
     })();
   }, [selectedSiteId]);
 
-  const fetchLogs = useCallback(async () => {
+  const fetchLogs = useCallback(async (targetPage = 1) => {
     setLoading(true);
     setError("");
     try {
@@ -115,8 +118,19 @@ export default function Logs() {
       if (postId) params.post_id = postId;
       if (userId) params.user_id = userId;
       if (date) params.date = date;
+      params.page = String(targetPage);
+      params.limit = String(PAGE_SIZE);
       const res = await api.get("/api/scan-logs", { params });
       setLogs(res.data.data || []);
+
+      const meta = res.data.meta;
+      if (meta) {
+        setTotalPages(meta.total_pages || 1);
+        setPage(meta.page || 1);
+      } else {
+        setTotalPages(1);
+        setPage(1);
+      }
     } catch (err) {
       setError(getErrorMessage(err, "Gagal memuat riwayat scan."));
     } finally {
@@ -125,7 +139,7 @@ export default function Logs() {
   }, [selectedSiteId, postId, userId, date]);
 
   useEffect(() => {
-    fetchLogs();
+    fetchLogs(1);
   }, [selectedSiteId, fetchLogs]);
 
   return (
@@ -150,9 +164,9 @@ export default function Logs() {
         </Alert>
       )}
 
-      <Card className="mb-6">
-        <CardContent className="p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+      <Card>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end mb-4">
             <div className="space-y-2">
               <Label>Tanggal</Label>
               <DatePicker
@@ -192,20 +206,8 @@ export default function Logs() {
                 </Select.Content>
               </Select>
             </div>
-            <div className="flex justify-start lg:justify-end">
-              <Button onClick={fetchLogs} disabled={loading} className="w-full sm:w-auto">
-                {loading ? "Memuat..." : "Terapkan Filter"}
-              </Button>
-            </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Hasil ({logs.length} catatan)</CardTitle>
-        </CardHeader>
-        <CardContent>
           {loading ? (
             <div className="space-y-2 py-2">
               {[...Array(5)].map((_, i) => (
@@ -299,6 +301,15 @@ export default function Logs() {
               </Table>
             </div>
           )}
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(p) => {
+              setPage(p);
+              fetchLogs(p);
+            }}
+          />
         </CardContent>
       </Card>
 
