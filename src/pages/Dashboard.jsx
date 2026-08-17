@@ -3,6 +3,7 @@ import api, { getErrorMessage } from "../api";
 import { useAuth } from "../AuthContext";
 import { useSite } from "../SiteContext";
 import { connectSocket } from "../socket";
+import { connectMqtt } from "../mqtt";
 import MonitoringMap from "../components/MonitoringMap";
 import {
   Card,
@@ -31,6 +32,7 @@ import {
   Users,
   TrendingUp,
 } from "lucide-react";
+import { Button } from "../components/ui/button";
 
 export default function Dashboard() {
   const { token } = useAuth();
@@ -72,7 +74,7 @@ export default function Dashboard() {
     let socket = null;
     let cancelled = false;
 
-    const onPostScanned = (payload) => {
+    const onPostReported = (payload) => {
       if (payload.site_id !== selectedSiteRef.current) return;
       setPosts((prev) =>
         prev.map((p) =>
@@ -99,27 +101,32 @@ export default function Dashboard() {
     connectSocket(token).then((s) => {
       if (cancelled) return;
       socket = s;
-      socket.on("post:scanned", onPostScanned);
+      socket.on("post:reported", onPostReported);
       socket.on("posts:changed", onPostsChanged);
-      socket.on("satpam:location", (data) => {
+    });
+
+    // Live tracking lokasi satpam lewat MQTT (bukan Socket.IO).
+    connectMqtt({
+      onLocation: (data) => {
+        if (!data?.id) return;
         setSatpamLocations((prev) => ({ ...prev, [data.id]: data }));
-      });
-      socket.on("satpam:offline", (data) => {
-        setSatpamLocations((prev) => {
-          const next = { ...prev };
-          delete next[data.id];
-          return next;
-        });
-      });
+      },
+      onStatus: (data) => {
+        if (data?.online === false) {
+          setSatpamLocations((prev) => {
+            const next = { ...prev };
+            delete next[data.id];
+            return next;
+          });
+        }
+      },
     });
 
     return () => {
       cancelled = true;
       if (socket) {
-        socket.off("post:scanned", onPostScanned);
+        socket.off("post:reported", onPostReported);
         socket.off("posts:changed", onPostsChanged);
-        socket.off("satpam:location");
-        socket.off("satpam:offline");
       }
     };
   }, [token, fetchPosts]);
@@ -136,6 +143,7 @@ export default function Dashboard() {
       value: greenCount,
       color: "text-saas-success",
       bgColor: "bg-saas-success-light",
+      borderColor: "border-saas-success",
     },
     {
       icon: AlertTriangle,
@@ -143,6 +151,7 @@ export default function Dashboard() {
       value: yellowCount,
       color: "text-saas-warning",
       bgColor: "bg-saas-warning-light",
+      borderColor: "border-saas-warning",
     },
     {
       icon: XCircle,
@@ -150,13 +159,15 @@ export default function Dashboard() {
       value: redCount,
       color: "text-saas-danger",
       bgColor: "bg-saas-danger-light",
+      borderColor: "border-saas-danger",
     },
     {
       icon: Users,
       label: "Total Pos",
       value: `${activePosts.length}`,
-      color: "text-saas-text-muted",
-      bgColor: "bg-saas-bg-secondary",
+      color: "text-saas-info",
+      bgColor: "bg-saas-info-light",
+      borderColor: "border-saas-info",
     },
   ];
 
@@ -164,7 +175,7 @@ export default function Dashboard() {
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-saas-border">
         <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-saas-text uppercase">
             Dashboard Monitoring
           </h1>
           <p className="text-saas-text-muted mt-1">
@@ -206,7 +217,10 @@ export default function Dashboard() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {statCards.map((stat, index) => (
-              <Card key={index}>
+             <Card
+               key={index}
+               className={`border-2 ${stat.borderColor} shadow-brutal transition-colors duration-150 hover:border-saas-primary`}
+             >
                 <CardContent className="p-5">
                   <div className="flex items-center gap-3">
                     <div
@@ -215,7 +229,7 @@ export default function Dashboard() {
                       <stat.icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="text-xl sm:text-2xl font-semibold tracking-tight text-saas-text">
+                     <div className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${stat.color}`}>
                         {stat.value}
                       </div>
                       <div className="text-xs font-medium text-saas-text-muted mt-0.5">

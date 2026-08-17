@@ -11,9 +11,9 @@ const SelectTrigger = React.forwardRef(
     <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex items-center justify-between h-11 w-full rounded-brutal border-2 border-brutal-black bg-saas-bg-secondary px-3 py-2 text-sm text-saas-text font-medium text-left",
-        "shadow-brutal-sm transition-all duration-100",
-        "focus:outline-none focus:ring-2 focus:ring-saas-primary focus:shadow-brutal",
+        "flex items-center justify-between h-11 w-full rounded-xl border border-saas-border bg-saas-bg-secondary px-3 py-2 text-sm text-saas-text font-medium text-left",
+        "transition-all duration-100",
+        "focus:outline-none focus:ring-2 focus:ring-saas-primary focus:border-saas-primary",
         "disabled:cursor-not-allowed disabled:opacity-50",
         "[&>span]:line-clamp-1 [&>span]:flex-1",
         className,
@@ -35,7 +35,7 @@ const SelectContent = React.forwardRef(
       <SelectPrimitive.Content
         ref={ref}
         className={cn(
-          "relative z-[1100] min-w-[8rem] overflow-hidden rounded-brutal border-2 border-brutal-black bg-saas-bg-secondary shadow-brutal max-h-[280px]",
+          "relative z-[1100] min-w-[8rem] overflow-hidden rounded-xl border border-saas-border bg-saas-bg-secondary shadow-card max-h-[280px]",
           position === "popper" && "translate-y-1",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className,
@@ -75,7 +75,7 @@ const SelectItem = React.forwardRef(
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-brutal py-1.5 pl-8 pr-2 text-sm text-saas-text font-medium outline-none focus:bg-saas-primary focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-lg py-1.5 pl-8 pr-2 text-sm text-saas-text font-medium outline-none focus:bg-saas-primary focus:text-black data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
       {...props}

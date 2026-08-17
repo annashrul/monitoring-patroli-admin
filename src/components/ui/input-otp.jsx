@@ -32,7 +32,7 @@ const InputOTP = React.forwardRef(
                 inputRefs.current[i - 1]?.focus();
               }
             }}
-            className="h-10 w-10 rounded-brutal border-2 border-brutal-black bg-saas-bg-secondary text-saas-text text-center text-sm font-bold font-mono shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-saas-primary/20 focus:border-saas-primary"
+            className="h-10 w-10 rounded-lg border border-saas-border bg-saas-bg-secondary text-saas-text text-center text-sm font-bold font-mono focus:outline-none focus:ring-2 focus:ring-saas-primary/20 focus:border-saas-primary"
             ref={ref}
             {...props}
           />

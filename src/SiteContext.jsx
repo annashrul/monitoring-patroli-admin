@@ -10,6 +10,10 @@ import { useAuth } from "./AuthContext";
 
 const SiteContext = createContext();
 
+function getSiteIdFromUrl() {
+  return new URLSearchParams(window.location.search).get("site_id") || "";
+}
+
 export function SiteProvider({ children }) {
   const { token } = useAuth();
   const [sites, setSites] = useState([]);
@@ -24,11 +28,16 @@ export function SiteProvider({ children }) {
       const res = await api.get("/api/sites");
       const activeSites = (res.data.data || []).filter((s) => s.is_active);
       setSites(activeSites);
+
       if (activeSites.length > 0) {
-        setSelectedSiteId((prev) => {
-          const exists = activeSites.find((s) => s.id === prev);
-          return exists ? prev : activeSites[0].id;
-        });
+        // Pakai site_id dari URL jika valid; selain itu default site pertama.
+        const urlSiteId = getSiteIdFromUrl();
+        const resolved = activeSites.some((s) => s.id === urlSiteId)
+          ? urlSiteId
+          : activeSites[0].id;
+        setSelectedSiteId(resolved);
+      } else {
+        setSelectedSiteId("");
       }
     } catch (err) {
       setError(getErrorMessage(err, "Gagal memuat daftar site."));
@@ -43,26 +52,19 @@ export function SiteProvider({ children }) {
     }
   }, [fetchSites, token]);
 
-  // Sync selectedSiteId to URL query param
-  const setSelectedSiteIdWithUrl = useCallback((value) => {
-    setSelectedSiteId(value);
-    const url = new URL(window.location.href);
-    if (value) {
-      url.searchParams.set('site_id', value);
-    } else {
-      url.searchParams.delete('site_id');
-    }
-    window.history.replaceState({}, '', url.toString());
-  }, []);
-
-  // Read initial site_id from URL on mount
+  // Sinkronkan selectedSiteId ke query param URL setiap kali berubah,
+  // termasuk saat pertama kali ditetapkan setelah login/fetch sites.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlSiteId = params.get('site_id');
-    if (urlSiteId && sites.some((s) => s.id === urlSiteId)) {
-      setSelectedSiteId(urlSiteId);
+    const url = new URL(window.location.href);
+    const current = url.searchParams.get("site_id") || "";
+    if (selectedSiteId === current) return;
+    if (selectedSiteId) {
+      url.searchParams.set("site_id", selectedSiteId);
+    } else {
+      url.searchParams.delete("site_id");
     }
-  }, [sites]);
+    window.history.replaceState({}, "", url.toString());
+  }, [selectedSiteId]);
 
   const selectedSite = sites.find((s) => s.id === selectedSiteId) || null;
 
@@ -71,7 +73,7 @@ export function SiteProvider({ children }) {
       value={{
         sites,
         selectedSiteId,
-        setSelectedSiteId: setSelectedSiteIdWithUrl,
+        setSelectedSiteId,
         selectedSite,
         loading,
         error,

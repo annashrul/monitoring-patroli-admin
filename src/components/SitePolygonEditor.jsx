@@ -132,7 +132,7 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
 
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
   return (
-    <div ref={mapContainerRef} className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
+    <div ref={mapContainerRef} className="relative rounded-xl overflow-hidden border border-saas-border" style={{ height: containerHeight }}>
       <div className="absolute top-2 left-2 z-[1000] w-[min(90%,360px)]">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-saas-text-muted z-10" />
@@ -148,7 +148,7 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
         </div>
         {searchResults.length > 0 && (
           <div
-            className="absolute left-0 right-0 top-full mt-1 bg-white border-2 border-brutal-black rounded-brutal overflow-hidden shadow-brutal max-h-60 overflow-y-auto z-[2000]"
+            className="absolute left-0 right-0 top-full mt-1 bg-saas-bg-secondary border border-saas-border rounded-xl overflow-hidden shadow-card max-h-60 overflow-y-auto z-[2000]"
             onScroll={(e) => {
               const el = e.currentTarget;
               if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10 && visibleCount < searchResults.length) {
@@ -214,6 +214,7 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
         <div className="absolute bottom-4 left-2 z-[999] flex gap-1">
           <MapFullscreenButton containerRef={mapContainerRef} />
           <Button
+            type="button"
             size="sm"
             variant={satellite ? "outline" : "default"}
             onClick={() => setSatellite(false)}
@@ -222,6 +223,8 @@ export default function SitePolygonEditor({ value, onChange, height = "min(420px
             Peta
           </Button>
           <Button
+            type="button"
+
             size="sm"
             variant={satellite ? "default" : "outline"}
             onClick={() => setSatellite(true)}

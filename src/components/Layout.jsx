@@ -30,6 +30,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Route,
 } from "lucide-react";
 import {
   Select,
@@ -46,6 +47,7 @@ const MENU = [
   { to: "/posts", label: "Titik Pos", icon: MapPin },
   { to: "/logs", label: "Riwayat Scan", icon: ClipboardList },
   { to: "/temuan", label: "Temuan", icon: AlertTriangle },
+  { to: "/locations", label: "Riwayat Lokasi", icon: Route },
   { to: "/users", label: "Pengguna", icon: Users },
 ];
 
@@ -56,6 +58,13 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // Pertahankan query param site_id saat berpindah menu.
+  const withSiteId = (path) => {
+    if (!selectedSiteId) return path;
+    const sep = path.includes("?") ? "&" : "?";
+    return `${path}${sep}site_id=${encodeURIComponent(selectedSiteId)}`;
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -65,16 +74,16 @@ export default function Layout() {
   const mainMarginLeft = sidebarCollapsed ? "lg:ml-20" : "lg:ml-64";
 
   return (
-    <div className="flex min-h-screen bg-saas-bg-secondary text-saas-text">
+    <div className="flex min-h-screen bg-saas-bg text-saas-text">
       {/* Sidebar for Desktop */}
       <aside
-        className={`hidden lg:block fixed inset-y-0 left-0 z-50 ${sidebarWidth} bg-saas-bg-tertiary border-r border-saas-border transition-all duration-200 ease-in-out ${sidebarCollapsed ? "" : ""}`}
+        className={`hidden lg:block fixed inset-y-0 left-0 z-50 ${sidebarWidth} bg-saas-bg-secondary border-r border-saas-border transition-all duration-200 ease-in-out ${sidebarCollapsed ? "" : ""}`}
       >
         {/* Header with collapse button */}
         <div className="flex h-16 items-center justify-between px-4 border-b border-saas-border">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-saas-primary flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
+              <Shield className="w-5 h-5 text-black" />
             </div>
             {!sidebarCollapsed && (
               <div>
@@ -127,14 +136,14 @@ export default function Layout() {
           {MENU.map((m) => (
             <NavLink
               key={m.to}
-              to={m.to}
+              to={withSiteId(m.to)}
               end={m.end}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 " +
                 (isActive
-                  ? "bg-saas-primary text-white font-semibold shadow-sm"
-                  : "text-saas-text-muted hover:bg-saas-bg-secondary hover:text-saas-text")
+                  ? "bg-saas-primary text-black font-semibold shadow-brutal-sm"
+                  : "text-saas-text-muted hover:bg-saas-bg-tertiary hover:text-saas-text")
               }
             >
               <m.icon className="w-5 h-5 flex-shrink-0" />
@@ -142,6 +151,38 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+
+        {/* Footer profile pinned */}
+        <div className="border-t border-saas-border p-3">
+          {sidebarCollapsed ? (
+            <div className="w-9 h-9 mx-auto rounded-lg bg-saas-primary/15 flex items-center justify-center text-saas-primary text-sm font-extrabold">
+              {user?.name?.charAt(0)?.toUpperCase() || "U"}
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 rounded-xl border border-saas-border bg-saas-bg-tertiary p-2.5">
+              <div className="w-9 h-9 rounded-lg bg-saas-primary flex items-center justify-center text-black text-sm font-extrabold shrink-0">
+                {user?.name?.charAt(0)?.toUpperCase() || "U"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-saas-text truncate">
+                  {user?.name}
+                </div>
+                <div className="text-[11px] font-medium text-saas-text-muted uppercase tracking-wide truncate">
+                  {user?.role}
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="h-8 w-8 shrink-0"
+                aria-label="Keluar"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+        </div>
       </aside>
 
       {/* Mobile Sidebar */}
@@ -150,7 +191,7 @@ export default function Layout() {
           <div className="flex h-16 items-center justify-between px-4 border-b border-saas-border">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-saas-primary flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+                <Shield className="w-5 h-5 text-black" />
               </div>
               <div>
                 <div className="font-semibold text-sm text-saas-text">
@@ -196,14 +237,14 @@ export default function Layout() {
             {MENU.map((m) => (
               <NavLink
                 key={m.to}
-                to={m.to}
+                to={withSiteId(m.to)}
                 end={m.end}
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) =>
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 " +
                   (isActive
-                    ? "bg-saas-primary text-white font-semibold shadow-sm"
-                    : "text-saas-text-muted hover:bg-saas-bg-secondary hover:text-saas-text")
+                    ? "bg-saas-primary text-black font-semibold shadow-brutal-sm"
+                    : "text-saas-text-muted hover:bg-saas-bg-tertiary hover:text-saas-text")
                 }
               >
                 <m.icon className="w-5 h-5 flex-shrink-0" />
@@ -240,7 +281,7 @@ export default function Layout() {
       <main
         className={`flex-1 ${mainMarginLeft} h-screen flex flex-col overflow-hidden`}
       >
-        <header className="shrink-0 z-40 h-16 bg-saas-bg border-b-2 border-brutal-black flex items-center justify-between px-4 lg:px-6 shadow-brutal-sm">
+        <header className="sticky top-0 shrink-0 z-40 h-16 bg-saas-bg-secondary border-b border-saas-border flex items-center justify-between px-4 lg:px-6">
           <div className="flex items-center gap-4 lg:hidden">
             <Button
               variant="ghost"

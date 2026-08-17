@@ -5,7 +5,7 @@ import L from 'leaflet';
 /**
  * Menyesuaikan viewport peta agar memuat seluruh polygon (atau titik fallback).
  */
-export default function FitBounds({ polygon, fallbackPoints }) {
+export default function FitBounds({ polygon, fallbackPoints, maxZoom, padding = 0.05 }) {
   const map = useMap();
 
   useEffect(() => {
@@ -18,11 +18,13 @@ export default function FitBounds({ polygon, fallbackPoints }) {
 
     try {
       const bounds = L.latLngBounds(pts);
-      map.fitBounds(bounds.pad(0.05));
+      const opts = {};
+      if (maxZoom != null) opts.maxZoom = maxZoom;
+      map.fitBounds(bounds.pad(padding), opts);
     } catch {
       // abaikan jika bounds tidak valid
     }
-  }, [map, polygon, fallbackPoints]);
+  }, [map, polygon, fallbackPoints, maxZoom, padding]);
 
   return null;
 }

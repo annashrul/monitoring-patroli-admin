@@ -46,6 +46,8 @@ const EMPTY_FORM = {
   interval_minutes: 120,
   latitude: "",
   longitude: "",
+  accuracy: null,
+  gps_timestamp: null,
   is_active: true,
 };
 
@@ -156,6 +158,8 @@ export default function Posts() {
       interval_minutes: post.interval_minutes || 120,
       latitude: post.latitude,
       longitude: post.longitude,
+      accuracy: post.accuracy ?? null,
+      gps_timestamp: post.gps_timestamp ?? null,
       is_active: post.is_active,
     });
     setFormError("");
@@ -179,6 +183,7 @@ export default function Posts() {
 
   const handleMapPick = ({ lat, lng }) => {
     setLocation(lat, lng);
+    setForm((f) => ({ ...f, accuracy: null, gps_timestamp: null }));
     setFormError("");
   };
 
@@ -192,6 +197,11 @@ export default function Posts() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocation(pos.coords.latitude, pos.coords.longitude);
+        setForm((f) => ({
+          ...f,
+          accuracy: pos.coords.accuracy != null ? Number(pos.coords.accuracy) : null,
+          gps_timestamp: pos.timestamp != null ? new Date(pos.timestamp).toISOString() : null,
+        }));
         setGeoLoading(false);
       },
       (err) => {
@@ -252,6 +262,8 @@ export default function Posts() {
           longitude: pickedPoint.lng,
           radius_m: radius,
           interval_minutes: parseInt(form.interval_minutes, 10) || 120,
+          accuracy: form.accuracy,
+          gps_timestamp: form.gps_timestamp,
         });
         setNotice("Pos berhasil dibuat.");
       } else {
@@ -262,6 +274,8 @@ export default function Posts() {
           radius_m: radius,
           interval_minutes: parseInt(form.interval_minutes, 10) || 120,
           is_active: !!form.is_active,
+          accuracy: form.accuracy,
+          gps_timestamp: form.gps_timestamp,
         });
         setNotice("Pos berhasil diperbarui.");
       }
@@ -411,7 +425,7 @@ export default function Posts() {
           >
             POS
           </Badge>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-saas-text">
             Manajemen Titik Pos
           </h1>
         </div>
@@ -554,6 +568,35 @@ export default function Posts() {
                     />
                   </div>
                 </div>
+                <div className="flex items-center gap-4 flex-wrap mt-2 text-xs font-medium text-saas-text">
+                  <span className="text-saas-text-muted">Akurasi GPS:</span>
+                  {form.accuracy != null ? (
+                    <Badge
+                      variant={
+                        form.accuracy <= 20
+                          ? "success"
+                          : form.accuracy <= 50
+                          ? "warning"
+                          : "destructive"
+                      }
+                    >
+                      ± {Math.round(form.accuracy)} m
+                    </Badge>
+                  ) : (
+                    <span className="text-saas-text-muted">—</span>
+                  )}
+                  <span className="text-saas-text-muted">Waktu GPS:</span>
+                  <span>
+                    {form.gps_timestamp
+                      ? new Date(form.gps_timestamp).toLocaleString("id-ID")
+                      : "—"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-saas-text-muted">
+                  Akurasi &amp; waktu diambil dari GPS saat kamu menekan
+                  &quot;Gunakan Lokasi Saya&quot;. Semakin kecil akurasi, semakin
+                  akurat posisi titik pos.
+                </p>
                 {pointInside === false && (
                   <Alert variant="warning">
                     <AlertDescription>

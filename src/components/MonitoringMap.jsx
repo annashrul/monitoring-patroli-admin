@@ -75,7 +75,7 @@ export default function MonitoringMap({ site, sites, posts, satpamLocations = {}
 
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
   return (
-    <div ref={mapContainerRef} className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
+    <div ref={mapContainerRef} className="relative rounded-xl overflow-hidden border border-saas-border" style={{ height: containerHeight }}>
       {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
       <MapContainer center={center} zoom={16} maxZoom={21} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
         <TileLayer

@@ -63,7 +63,7 @@ export default function Temuan() {
   return (
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6 pb-3 border-b border-saas-border">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">Laporan Findings</h1>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-saas-text">Laporan Findings</h1>
       </div>
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-3 flex-wrap">

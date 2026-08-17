@@ -7,17 +7,17 @@ const Alert = React.forwardRef(
       ref={ref}
       role="alert"
       className={cn(
-        "relative w-full rounded-brutal border-2 p-4 text-sm font-bold shadow-brutal-sm",
+        "relative w-full rounded-xl border p-4 text-sm font-medium",
         variant === "default" &&
-          "bg-saas-bg-secondary text-saas-text border-brutal-black",
+          "bg-saas-bg-secondary text-saas-text border-saas-border",
         variant === "destructive" &&
-          "bg-saas-danger-light border-brutal-black text-saas-danger",
+          "bg-saas-danger-light border-2 border-saas-danger text-saas-danger font-bold shadow-brutal",
         variant === "success" &&
-          "bg-saas-success-light border-brutal-black text-saas-success",
+          "bg-saas-success-light border-saas-success/30 text-saas-success",
         variant === "warning" &&
-          "bg-saas-warning-light border-brutal-black text-saas-warning",
+          "bg-saas-warning-light border-saas-warning/30 text-saas-warning",
         variant === "info" &&
-          "bg-saas-primary-light border-brutal-black text-saas-primary",
+          "bg-saas-primary-light border-saas-primary/30 text-saas-primary",
         className,
       )}
       {...props}

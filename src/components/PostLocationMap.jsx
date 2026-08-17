@@ -29,7 +29,7 @@ function smallPostIcon(post) {
   const s = 22;
   return L.divIcon({
     className: 'post-marker-icon',
-    html: `<div style="width:${s}px;height:${s}px;filter:drop-shadow(1px 1px 0 rgba(0,0,0,0.3));">${pinSvg(color, s)}</div><div style="transform:translate(-50%,6px);white-space:nowrap;font-size:11px;font-weight:700;color:#111827;background:rgba(255,255,255,0.92);padding:1px 6px;border-radius:2px;border:2px solid rgba(0,0,0,0.12);position:absolute;left:0;text-align:center;">${escapeHtml(post.name)}</div>`,
+    html: `<div style="width:${s}px;height:${s}px;filter:drop-shadow(1px 1px 0 rgba(0,0,0,0.3));">${pinSvg(color, s)}</div><div style="transform:translate(-50%,6px);white-space:nowrap;font-size:11px;font-weight:700;color:#F3F4F6;background:rgba(16,21,29,0.92);padding:1px 6px;border-radius:4px;border:1px solid #2A3441;position:absolute;left:0;text-align:center;">${escapeHtml(post.name)}</div>`,
     iconSize: [s, s],
     iconAnchor: [s / 2, s],
     popupAnchor: [0, -s],
@@ -40,7 +40,7 @@ function pickedIcon() {
   const s = 22;
   return L.divIcon({
     className: 'post-marker-icon',
-    html: `<div style="width:${s}px;height:${s}px;filter:drop-shadow(1px 1px 0 rgba(0,0,0,0.3));">${pinSvg('#f59e0b', s)}</div><div style="transform:translate(-50%,6px);white-space:nowrap;font-size:11px;font-weight:700;color:#111827;background:rgba(255,255,255,0.92);padding:1px 6px;border-radius:2px;border:2px solid rgba(0,0,0,0.12);position:absolute;left:0;text-align:center;">Lokasi Dipilih</div>`,
+    html: `<div style="width:${s}px;height:${s}px;filter:drop-shadow(1px 1px 0 rgba(0,0,0,0.3));">${pinSvg('#f59e0b', s)}</div><div style="transform:translate(-50%,6px);white-space:nowrap;font-size:11px;font-weight:700;color:#F3F4F6;background:rgba(16,21,29,0.92);padding:1px 6px;border-radius:4px;border:1px solid #2A3441;position:absolute;left:0;text-align:center;">Lokasi Dipilih</div>`,
     iconSize: [s, s],
     iconAnchor: [s / 2, s],
     popupAnchor: [0, -s],
@@ -82,7 +82,7 @@ export default function PostLocationMap({
 
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
   return (
-    <div ref={mapContainerRef} className="relative rounded-none overflow-hidden border-[3px] border-brutal-zinc shadow-brutalSm" style={{ height: containerHeight }}>
+    <div ref={mapContainerRef} className="relative rounded-xl overflow-hidden border border-saas-border" style={{ height: containerHeight }}>
       {!mapReady && <Skeleton className="absolute inset-0 z-[9999] w-full h-full" />}
       <MapContainer center={center} zoom={18} maxZoom={21} style={{ height: '100%', width: '100%' }} whenReady={() => setMapReady(true)}>
         <MapInvalidator />

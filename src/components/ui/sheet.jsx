@@ -29,7 +29,7 @@ const SheetContent = React.forwardRef(
       <SheetPrimitive.Content
         ref={ref}
         className={cn(
-          "fixed z-50 gap-4 bg-saas-bg-secondary p-6 shadow-brutal-lg border-l-3 border-brutal-black",
+          "fixed z-50 gap-4 bg-saas-bg-secondary p-6 shadow-card border-l border-saas-border",
           side === "right" && "inset-y-0 right-0 h-full w-full max-w-md",
           side === "left" && "inset-y-0 left-0 h-full w-full max-w-md",
           side === "top" && "inset-x-0 top-0 h-auto max-h-[50vh]",

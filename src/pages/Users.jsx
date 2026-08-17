@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api, { getErrorMessage } from "../api";
 import { useAuth } from "../AuthContext";
 import { useSite } from "../SiteContext";
@@ -50,12 +50,14 @@ export default function Users() {
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const fetchUsers = async (targetPage = 1, searchQuery = search) => {
+  const fetchUsers = useCallback(async (targetPage = 1, searchQuery = "") => {
     setLoading(true);
     setError("");
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.set("search", searchQuery);
+      if (selectedSiteId) params.set("site_id", selectedSiteId);
+      params.set("exclude_owner", "true");
       params.set("page", String(targetPage));
       params.set("limit", String(PAGE_SIZE));
 
@@ -75,23 +77,17 @@ export default function Users() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchUsers(1);
-  }, []);
+  }, [selectedSiteId]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1);
-      fetchUsers(1);
+      fetchUsers(1, search);
     }, 400);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, selectedSiteId, fetchUsers]);
 
-  const users = (selectedSiteId
-    ? allUsers.filter((u) => u.site_id === selectedSiteId || u.role === 'owner')
-    : allUsers).filter((u) => u.role !== 'owner');
+  const users = allUsers;
 
   const openCreate = () => {
     setFormMode("create");

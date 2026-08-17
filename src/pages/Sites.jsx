@@ -27,7 +27,12 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import Modal from "../components/Modal";
 import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, MapPin } from "lucide-react";
 
-const EMPTY_FORM = { name: "", polygon: [] };
+const EMPTY_FORM = {
+  name: "",
+  polygon: [],
+  locationIntervalSec: 20,
+  locationMinDistanceM: 10,
+};
 
 export default function Sites() {
   const { refetchSites, selectedSiteId } = useSite();
@@ -74,7 +79,12 @@ export default function Sites() {
   const openEdit = (site) => {
     setFormMode("edit");
     setEditingId(site.id);
-    setForm({ name: site.name, polygon: site.polygon || [] });
+    setForm({
+      name: site.name,
+      polygon: site.polygon || [],
+      locationIntervalSec: Math.round((site.location_history_interval_ms ?? 20000) / 1000),
+      locationMinDistanceM: site.location_min_distance_m ?? 10,
+    });
     setFormError("");
     setNotice("");
   };
@@ -101,17 +111,17 @@ export default function Sites() {
 
     setSaving(true);
     try {
+      const payload = {
+        name: form.name.trim(),
+        polygon: form.polygon,
+        location_history_interval_ms: Number(form.locationIntervalSec) * 1000,
+        location_min_distance_m: Number(form.locationMinDistanceM),
+      };
       if (formMode === "create") {
-        await api.post("/api/sites", {
-          name: form.name.trim(),
-          polygon: form.polygon,
-        });
+        await api.post("/api/sites", payload);
         setNotice("Site berhasil dibuat.");
       } else {
-        await api.put(`/api/sites/${editingId}`, {
-          name: form.name.trim(),
-          polygon: form.polygon,
-        });
+        await api.put(`/api/sites/${editingId}`, payload);
         setNotice("Site berhasil diperbarui.");
       }
       closeForm();
@@ -192,7 +202,7 @@ export default function Sites() {
           <Badge variant="outline" className="border-saas-border text-saas-text-muted font-mono tracking-wider">
             SITE
           </Badge>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-saas-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-saas-text">
             Manajemen Area (Sites)
           </h1>
         </div>
@@ -250,6 +260,46 @@ export default function Sites() {
                 required
               />
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="site-interval">Interval Rekam Lokasi (detik)</Label>
+                <Input
+                  id="site-interval"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={form.locationIntervalSec}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      locationIntervalSec: e.target.value,
+                    }))
+                  }
+                />
+                <p className="text-xs text-saas-text-muted">
+                  Seberapa sering lokasi dicatat bila satpam berpindah (default 20).
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="site-distance">Jarak Minimum Pergerakan (meter)</Label>
+                <Input
+                  id="site-distance"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.locationMinDistanceM}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      locationMinDistanceM: e.target.value,
+                    }))
+                  }
+                />
+                <p className="text-xs text-saas-text-muted">
+                  Jarak minimal agar dianggap berpindah (default 10 m).
+                </p>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>
                 Polygon Area{" "}
@@ -293,6 +343,7 @@ export default function Sites() {
                   <TableRow>
                     <TableHead>Nama</TableHead>
                     <TableHead>Jumlah Titik Polygon</TableHead>
+                    <TableHead>Rekam Lokasi</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="min-w-[130px] sm:min-w-[280px]">Aksi</TableHead>
                   </TableRow>
@@ -312,6 +363,11 @@ export default function Sites() {
                       <TableCell>
                         {Array.isArray(site.polygon) ? site.polygon.length : 0}{" "}
                         titik
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        tiap {Math.round((site.location_history_interval_ms ?? 20000) / 1000)} dtk
+                        <span className="text-saas-text-muted"> • ≥ </span>
+                        {site.location_min_distance_m ?? 10} m
                       </TableCell>
                       <TableCell>
                         <Badge variant={site.is_active ? "success" : "muted"}>

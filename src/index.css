@@ -4,16 +4,25 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes skeleton-shimmer-rtl {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 @layer base {
   :root {
     --brutal-border: #000000;
-    --brutal-shadow: 4px 4px 0px #000000;
-    --brutal-shadow-sm: 2px 2px 0px #000000;
-    --brutal-shadow-lg: 6px 6px 0px #000000;
+    --brutal-shadow: 4px 4px 0px #475569;
+    --brutal-shadow-sm: 2px 2px 0px #475569;
+    --brutal-shadow-lg: 6px 6px 0px #475569;
   }
 
   * {
-    border-color: #000000;
+    border-color: #2A3441;
   }
 
   body {
@@ -37,7 +46,7 @@
   }
 
   ::selection {
-    @apply bg-saas-primary text-white;
+    @apply bg-saas-primary text-black;
   }
 
   :focus-visible {
@@ -320,7 +329,17 @@
   }
 
   .saas-skeleton {
-    @apply animate-pulse bg-saas-bg-tertiary rounded-brutal border-2 border-brutal-black;
+    @apply bg-saas-bg-tertiary rounded-xl border border-saas-border;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(42, 52, 65, 0.4) 25%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(42, 52, 65, 0.4) 75%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer-rtl 1.4s linear infinite;
   }
 }
 

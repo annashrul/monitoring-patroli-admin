@@ -17,10 +17,10 @@ function TimePicker({ value, onChange, className }) {
 
   return (
     <div className={cn(
-      "flex items-center h-11 rounded-brutal border-2 border-brutal-black bg-saas-bg-secondary shadow-brutal-sm overflow-hidden",
+      "flex items-center h-11 rounded-xl border border-saas-border bg-saas-bg-secondary overflow-hidden",
       className,
     )}>
-      <div className="flex items-center gap-1.5 px-3 border-r-2 border-brutal-black h-full bg-saas-bg-tertiary/50">
+      <div className="flex items-center gap-1.5 px-3 border-r border-saas-border h-full bg-saas-bg-tertiary/50">
         <Clock className="w-4 h-4 text-saas-text-muted" />
         <span className="text-xs font-bold text-saas-text-muted uppercase tracking-wider">Jam</span>
       </div>

@@ -9,6 +9,7 @@ import Posts from './pages/Posts';
 import Logs from './pages/Logs';
 import Users from './pages/Users';
 import Temuan from './pages/Temuan';
+import Locations from './pages/Locations';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
               <Route path="logs" element={<Logs />} />
               <Route path="users" element={<Users />} />
               <Route path="temuan" element={<Temuan />} />
+              <Route path="locations" element={<Locations />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

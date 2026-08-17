@@ -49,17 +49,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-brutal-bg flex items-center justify-center p-5">
+    <div className="min-h-screen bg-saas-bg flex items-center justify-center p-5">
       <div className="w-full max-w-[400px]">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-saas-primary shadow-lg mb-4">
-            <Shield className="w-7 h-7 text-white" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-saas-primary shadow-brutal mb-4">
+            <Shield className="w-7 h-7 text-black" />
           </div>
-          <h1 className="text-2xl font-bold text-saas-text mb-1">Patroli Satpam</h1>
+          <h1 className="text-2xl font-black text-saas-text mb-1">Patroli Satpam</h1>
           <p className="text-sm text-saas-text-muted">Masuk ke dashboard admin</p>
         </div>
 
-        <Card className="shadow-lg border-brutal-zinc">
+        <Card className="shadow-card border-saas-border">
           <CardContent className="p-6">
             {error && (
               <Alert variant="destructive" className="mb-5">
@@ -100,7 +100,7 @@ export default function Login() {
               </Button>
             </form>
 
-            <p className="text-center text-xs text-brutal-muted mt-6">
+            <p className="text-center text-xs text-saas-text-muted mt-6">
               Sistem Monitoring Patroli Satpam v1.0
             </p>
           </CardContent>

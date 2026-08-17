@@ -23,6 +23,7 @@ export default function MapFullscreenButton({ containerRef }) {
 
   return (
     <Button
+      type="button"
       size="sm"
       variant="outline"
       onClick={toggle}
