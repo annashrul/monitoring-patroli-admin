@@ -1,6 +1,7 @@
-import { Fragment, useState, useRef } from 'react';
+import { Fragment, useState, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import { animatePosition, GPS_FILTER_DEFAULTS } from '../utils/gpsFilter';
 import FitBounds from './FitBounds';
 import { Badge } from './ui/badge';
 import { Skeleton } from './ui/skeleton';
@@ -42,6 +43,40 @@ function smallPinIcon(color) {
     iconAnchor: [11, 22],
     popupAnchor: [0, -22],
   });
+}
+
+/**
+ * Marker satpam dengan animasi halus: saat posisi valid berubah (sudah lolos
+ * GPS filter), marker meluncur dari posisi lama ke baru selama
+ * `smoothingDurationMs` — tidak melompat.
+ */
+function AnimatedMarker({ position, icon, durationMs = GPS_FILTER_DEFAULTS.smoothingDurationMs, children }) {
+  const [displayPos, setDisplayPos] = useState(position);
+  const displayPosRef = useRef(position);
+  const cancelAnimRef = useRef(null);
+
+  useEffect(() => {
+    const from = displayPosRef.current;
+    const to = position;
+    cancelAnimRef.current?.();
+    cancelAnimRef.current = animatePosition(
+      { lat: from[0], lng: from[1] },
+      { lat: to[0], lng: to[1] },
+      (lat, lng) => {
+        displayPosRef.current = [lat, lng];
+        setDisplayPos([lat, lng]);
+      },
+      durationMs,
+    );
+    return () => cancelAnimRef.current?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [position, durationMs]);
+
+  return (
+    <Marker position={displayPos} icon={icon}>
+      {children}
+    </Marker>
+  );
 }
 
 function formatTime(iso) {
@@ -132,7 +167,7 @@ export default function MonitoringMap({ site, sites, posts, satpamLocations = {}
           </Marker>
         ))}
         {Object.values(satpamLocations).map((loc) => (
-          <Marker
+          <AnimatedMarker
             key={loc.id}
             position={[loc.latitude, loc.longitude]}
             icon={L.divIcon({

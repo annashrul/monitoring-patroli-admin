@@ -22,6 +22,7 @@ import {
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Skeleton } from "../components/ui/skeleton";
 import Modal from "../components/Modal";
+import { haversineMeters } from "../utils/gpsFilter";
 import { Eye } from "lucide-react";
 
 const KONDISI_BADGE = {
@@ -29,6 +30,33 @@ const KONDISI_BADGE = {
   temuan: { label: "Temuan", variant: "warning" },
   darurat: { label: "Darurat", variant: "destructive" },
 };
+
+/**
+ * Jarak posisi satpam saat scan ke titik pos (meter).
+ * Dihitung dari koordinat yang tersimpan di scan_logs vs koordinat pos;
+ * fallback ke `distance_m` hasil backend bila koordinat tidak tersedia.
+ */
+function scanDistanceMeters(log) {
+  const lat = Number(log.latitude);
+  const lng = Number(log.longitude);
+  const pLat = Number(log.post?.latitude);
+  const pLng = Number(log.post?.longitude);
+  if (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    Number.isFinite(pLat) &&
+    Number.isFinite(pLng)
+  ) {
+    return haversineMeters(lat, lng, pLat, pLng);
+  }
+  return log.distance_m != null ? Number(log.distance_m) : null;
+}
+
+function formatScanDistance(log) {
+  const d = scanDistanceMeters(log);
+  if (d == null || !Number.isFinite(d)) return "-";
+  return `${d.toFixed(1)} m`;
+}
 
 function KondisiCell({ log }) {
   if (log.status !== "ok")
@@ -279,7 +307,7 @@ export default function Logs() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {log.distance_m != null ? `${log.distance_m} m` : "-"}
+                        {formatScanDistance(log)}
                       </TableCell>
                       <TableCell className="text-xs font-mono">
                         {log.latitude != null && log.longitude != null
@@ -336,7 +364,7 @@ export default function Logs() {
                 {detailLog.status === "ok" ? "OK" : "Di Luar Radius"}
               </Badge>
               <span className="font-bold text-saas-text-muted">Jarak</span>
-              <span>{detailLog.distance_m != null ? `${detailLog.distance_m} m` : "-"}</span>
+              <span>{formatScanDistance(detailLog)}</span>
               <span className="font-bold text-saas-text-muted">Koordinat</span>
               <span className="font-mono text-xs">
                 {detailLog.latitude != null ? `${Number(detailLog.latitude).toFixed(6)}, ${Number(detailLog.longitude).toFixed(6)}` : "-"}

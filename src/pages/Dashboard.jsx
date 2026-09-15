@@ -4,6 +4,7 @@ import { useAuth } from "../AuthContext";
 import { useSite } from "../SiteContext";
 import { connectSocket } from "../socket";
 import { connectMqtt } from "../mqtt";
+import { GpsFilter } from "../utils/gpsFilter";
 import MonitoringMap from "../components/MonitoringMap";
 import {
   Card,
@@ -43,6 +44,9 @@ export default function Dashboard() {
   const [satpamLocations, setSatpamLocations] = useState({});
   const [statusLabels, setStatusLabels] = useState(null);
   const selectedSiteRef = useRef("");
+  // Satu instance filter GPS per satpam (menahan jitter/outlier/akurasi buruk
+  // sebelum koordinat dipakai menggerakkan marker di peta).
+  const gpsFiltersRef = useRef({});
 
   const fetchPosts = useCallback(async (siteId) => {
     try {
@@ -106,10 +110,30 @@ export default function Dashboard() {
     });
 
     // Live tracking lokasi satpam lewat MQTT (bukan Socket.IO).
+    // Setiap koordinat mentah dilewatkan GPS filter dulu; marker hanya
+    // bergerak untuk koordinat yang lolos (jitter/outlier/akurasi buruk diabaikan).
     connectMqtt({
       onLocation: (data) => {
         if (!data?.id) return;
-        setSatpamLocations((prev) => ({ ...prev, [data.id]: data }));
+        const filter = gpsFiltersRef.current[data.id] || (gpsFiltersRef.current[data.id] = new GpsFilter());
+        const result = filter.push({
+          latitude: data.latitude,
+          longitude: data.longitude,
+          accuracy: data.accuracy,
+          timestamp: data.timestamp,
+        });
+        if (!result.accepted) return;
+        const p = result.point;
+        setSatpamLocations((prev) => ({
+          ...prev,
+          [data.id]: {
+            ...data,
+            latitude: p.lat,
+            longitude: p.lng,
+            accuracy: p.accuracy ?? data.accuracy ?? null,
+            filter_status: result.status,
+          },
+        }));
       },
       onStatus: (data) => {
         if (data?.online === false) {
@@ -118,6 +142,7 @@ export default function Dashboard() {
             delete next[data.id];
             return next;
           });
+          delete gpsFiltersRef.current[data.id];
         }
       },
     });

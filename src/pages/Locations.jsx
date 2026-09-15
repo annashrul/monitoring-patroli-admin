@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import api, { getErrorMessage } from "../api";
 import { useSite } from "../SiteContext";
 import { subscribeLocation } from "../mqtt";
+import { GpsFilter, haversineMeters } from "../utils/gpsFilter";
 import TrailMap from "../components/TrailMap";
 import { Card, CardContent } from "../components/ui/card";
 import { DatePicker } from "../components/ui/date-picker";
@@ -18,7 +19,7 @@ import {
 } from "../components/ui/table";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Skeleton } from "../components/ui/skeleton";
-import { Route } from "lucide-react";
+import { Route, Clock, TrendingUp } from "lucide-react";
 
 function todayStr() {
   const d = new Date();
@@ -26,6 +27,30 @@ function todayStr() {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
+}
+
+/** Format jarak (meter) → "856 m" atau "1,24 km". */
+function formatDistance(m) {
+  if (m == null || !Number.isFinite(m)) return "-";
+  if (m < 1000) return `${m.toFixed(0)} m`;
+  return `${(m / 1000).toFixed(2)} km`;
+}
+
+/** Format durasi (ms) → "45 mnt" atau "1 jam 10 mnt". */
+function formatDuration(ms) {
+  if (ms == null || ms < 0) return "-";
+  const totalMin = Math.floor(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const min = totalMin % 60;
+  if (h > 0) return `${h} jam ${min} mnt`;
+  return `${min} mnt`;
+}
+
+/** Kecepatan rata-rata (km/jam) dari jarak & durasi. */
+function formatSpeed(distanceM, durationMs) {
+  if (distanceM == null || !durationMs || durationMs <= 0) return "-";
+  const kmh = distanceM / 1000 / (durationMs / 3600000);
+  return `${kmh.toFixed(1)} km/jam`;
 }
 
 export default function Locations() {
@@ -82,14 +107,22 @@ export default function Locations() {
   }, [fetchLocations]);
 
   // Live trail: saat melihat tanggal hari ini, tambahkan lokasi realtime dari MQTT.
+  // Setiap koordinat mentah dilewatkan GPS filter — polyline hanya menambah
+  // titik yang lolos filter (jitter/outlier/akurasi buruk tidak ikut digambar).
   useEffect(() => {
     if (!userId || date !== todayStr()) return;
+    const filter = new GpsFilter();
     const unsubscribe = subscribeLocation((data) => {
       if (data?.id !== userId) return;
-      const lat = typeof data.latitude === "number" ? data.latitude : null;
-      const lng = typeof data.longitude === "number" ? data.longitude : null;
-      if (lat == null || lng == null) return;
       const ts = data.timestamp || new Date().toISOString();
+      const result = filter.push({
+        latitude: data.latitude,
+        longitude: data.longitude,
+        accuracy: data.accuracy,
+        timestamp: ts,
+      });
+      if (!result.accepted) return;
+      const p = result.point;
       setLocations((prev) => {
         // Hindari duplikat (QoS 1 bisa kirim dua kali).
         if (prev.length && prev[prev.length - 1].recorded_at === ts) return prev;
@@ -98,8 +131,8 @@ export default function Locations() {
           {
             id: `live-${ts}`,
             user_id: userId,
-            latitude: lat,
-            longitude: lng,
+            latitude: p.lat,
+            longitude: p.lng,
             recorded_at: ts,
             user: { id: userId, name: data.name || "" },
           },
@@ -122,6 +155,30 @@ export default function Locations() {
   );
 
   const satpamName = satpams.find((u) => u.id === userId)?.name || "-";
+
+  // Statistik pergerakan: jarak total (meter), durasi, kecepatan rata-rata.
+  const trailStats = useMemo(() => {
+    let distance = 0;
+    for (let i = 1; i < points.length; i++) {
+      distance += haversineMeters(
+        points[i - 1].lat,
+        points[i - 1].lng,
+        points[i].lat,
+        points[i].lng,
+      );
+    }
+    let durationMs = null;
+    if (points.length >= 2) {
+      const t0 = points[0].recorded_at
+        ? new Date(points[0].recorded_at).getTime()
+        : null;
+      const t1 = points[points.length - 1].recorded_at
+        ? new Date(points[points.length - 1].recorded_at).getTime()
+        : null;
+      if (t0 != null && t1 != null) durationMs = Math.max(0, t1 - t0);
+    }
+    return { distance, durationMs };
+  }, [points]);
 
   const latest = [...points].reverse().slice(0, 100);
 
@@ -194,6 +251,20 @@ export default function Locations() {
                 </div>
                 <span className="text-xs text-saas-text-muted font-medium">
                   {points.length} titik tercatat
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-4 py-2 border-b border-saas-border text-xs font-bold text-saas-text">
+                <span className="flex items-center gap-1.5">
+                  <Route className="w-3.5 h-3.5 text-saas-info" />
+                  Jarak: {formatDistance(trailStats.distance)}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-saas-info" />
+                  Durasi: {formatDuration(trailStats.durationMs)}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-saas-info" />
+                  Rata-rata: {formatSpeed(trailStats.distance, trailStats.durationMs)}
                 </span>
               </div>
               <div style={{ height: "min(520px, 70vh)" }}>

@@ -8,6 +8,7 @@ import {
 } from "maplibre-gl";
 import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { animatePosition } from "../utils/gpsFilter";
 
 const STYLES = [
   { id: "liberty", label: "Jalan (Liberty)", url: "https://tiles.openfreemap.org/styles/liberty" },
@@ -138,6 +139,13 @@ export default function TrailMap({ points, sitePolygon = [] }) {
   const styleInitialized = useRef(false);
   const [styleId, setStyleId] = useState("liberty");
 
+  // Trail yang benar-benar digambar. Titik akhir dianimasi (smoothing) saat
+  // posisi valid berpindah, sehingga marker akhir tidak melompat.
+  const [drawnPoints, setDrawnPoints] = useState(points);
+  const committedRef = useRef(points);
+  const displayedTailRef = useRef(points.length ? points[points.length - 1] : null);
+  const animCancelRef = useRef(null);
+
   // Inisialisasi peta sekali.
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -190,18 +198,60 @@ export default function TrailMap({ points, sitePolygon = [] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Perbarui data saat points berubah (tanpa re-fit, agar view tidak lompat
-  // saat trail bertambah live).
+  // Titik akhir trail dianimasi saat ada titik baru (hasil GPS filter):
+  // garis/polyline tetap memakai koordinat yang sudah lolos filter, dan
+  // marker akhir meluncur ke posisi barunya tanpa melompat.
+  useEffect(() => {
+    const prev = committedRef.current;
+    const next = points;
+
+    const samePrefix =
+      prev.length > 0 &&
+      next.length >= prev.length &&
+      next.slice(0, prev.length).every(
+        (p, i) => p.lat === prev[i].lat && p.lng === prev[i].lng,
+      );
+
+    animCancelRef.current?.();
+    // Titik akhir yang sedang terlihat (bisa sedang di tengah animasi).
+    const from =
+      displayedTailRef.current ?? (prev.length ? prev[prev.length - 1] : null);
+    displayedTailRef.current = next.length ? next[next.length - 1] : null;
+
+    if (!samePrefix) {
+      // Pergantian total (ganti satpam/tanggal) — gambar langsung.
+      committedRef.current = next;
+      setDrawnPoints(next);
+      return;
+    }
+
+    // Trail bertambah / titik akhir bergeser — animasikan titik akhir.
+    const to = next[next.length - 1];
+    committedRef.current = next; // bandingkan update berikutnya terhadap target
+    animCancelRef.current = animatePosition(
+      { lat: from.lat, lng: from.lng },
+      { lat: to.lat, lng: to.lng },
+      (lat, lng) => {
+        displayedTailRef.current = { ...to, lat, lng };
+        setDrawnPoints([...next.slice(0, -1), displayedTailRef.current]);
+      },
+    );
+
+    return () => animCancelRef.current?.();
+  }, [points]);
+
+  // Perbarui data saat drawnPoints berubah (tanpa re-fit, agar view tidak
+  // lompat saat trail bertambah live).
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const update = () => {
       const src = map.getSource("trail");
-      if (src) src.setData(toGeoJson(points));
+      if (src) src.setData(toGeoJson(drawnPoints));
     };
     if (map.loaded() && map.getSource("trail")) update();
     else map.once("load", update);
-  }, [points]);
+  }, [drawnPoints]);
 
   // Ganti gaya peta.
   useEffect(() => {
